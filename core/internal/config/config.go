@@ -263,7 +263,8 @@ type Network struct {
 	// shared relay pool. On by default for an address already configured.
 	APIRelayEnabled bool `json:"api_relay_enabled"`
 	// SharedRelayEnabled allows the manifest's shared Guardian relay pool
-	// after HTTP 451. An enabled personal relay takes priority.
+	// after HTTP 451 is first retried directly with a doubled path. An
+	// enabled personal relay takes priority.
 	SharedRelayEnabled bool `json:"shared_relay_enabled"`
 	// APIRelayECH hides the relay's name from the network with Encrypted
 	// Client Hello (TLS 1.3): "on" (or empty: with ECH when the relay's

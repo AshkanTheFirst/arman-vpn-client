@@ -35,7 +35,7 @@ Do not run `go mod tidy` or upgrade dependencies for an unrelated edit. Dependen
 
 For an automatic Guardian relay test, `ARMAN_VPN_UPDATE_SERVER` also selects the core's `/updates.json` relay manifest. This lets an isolated Windows test use an unpublished candidate list after a real Guardian HTTP 451. Worker health remains local to the worker; only the subsequent authenticated retry contacts Guardian.
 
-Mock control-plane transports remain authoritative even when installed after daemon configuration. Automatic relay recovery checks the active transport on each request, so a fixture's HTTP 451 cannot trigger real metadata discovery or worker traffic. Cover both fixture/configuration orders when changing this boundary.
+Mock control-plane transports remain authoritative even when installed after daemon configuration. Automatic relay recovery checks the active transport on each request, so a fixture's HTTP 451 cannot trigger real metadata discovery or worker traffic. Guardian's own doubled-path retry runs before that recovery and uses the same transport, so a fixture that refuses every path sees two requests (the original and the doubled path) before a relay is tried. Cover both fixture/configuration orders when changing this boundary.
 
 ### hev-socks5-tunnel
 

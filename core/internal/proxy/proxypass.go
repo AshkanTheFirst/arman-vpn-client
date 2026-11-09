@@ -69,7 +69,7 @@ func fetchProxyPassCtx(ctx context.Context, endpoint, accessToken string) (*guar
 func GuardianFailureHint(err error) string {
 	switch {
 	case errors.Is(err, guardian.ErrRegionUnavailable):
-		return "Guardian refuses requests from this region (HTTP 451); set network.api_relay to your own relay in a supported region (docs/relay)"
+		return "Guardian still refuses requests from this region (HTTP 451) after the built-in direct retry; as a fallback, set network.api_relay to your own relay in a supported region (docs/relay)"
 	case errors.Is(err, fxa.ErrReauthRequired):
 		return "the saved Firefox Account credential was rejected; sign the account in again from the dashboard"
 	case errors.Is(err, guardian.ErrQuotaExceeded):

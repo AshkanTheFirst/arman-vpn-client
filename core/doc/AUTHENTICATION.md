@@ -62,7 +62,7 @@ Every Guardian request sends `Authorization: Bearer`, `Content-Type: application
 | 401 | `ErrTokenInvalid` | OAuth access token refused; refresh it |
 | 403 | `ErrTokenInvalid`, `ErrNotEntitled` | Valid token, no proxy entitlement; activate the account |
 | 429 | `ErrQuotaExceeded` | Quota spent; `RetryAfter` and quota usage are carried when sent |
-| 451 | `ErrRegionUnavailable` | Guardian refuses the requesting region; not retried |
+| 451 | `ErrRegionUnavailable` | Guardian or its CDN edge refuses the requesting region; retried once directly with a doubled leading slash, then through a relay if configured |
 | 5xx | `ErrServer` | Transient; retried with backoff |
 
 `guardian.IsTransient`, `guardian.RetryAfter`, and `guardian.UsageFromError` expose these properties to the CLI. FxA rejections of a stored refresh or session token (HTTP 400/401/403, except errno 107) match `ErrReauthRequired`. Preserve typed errors and `errors.Is`/`errors.As` behavior when changing API parsing.
@@ -132,7 +132,7 @@ Terminal failures are reported, not hammered: `reauth_required` (FxA rejected th
 Startup, renewal, quota checks, and manual account switches all obtain passes through `AccountPool.AcquirePass`; tests that build a controller without an account pool exercise the same recovery through `acquireUsablePass` with one fixed auth.
 
 - HTTP 401 triggers an OAuth refresh; HTTP 403 (also after a refresh) triggers Guardian activation (`recoverGuardianRejection`).
-- Transient network/server failures and HTTP 451 return without trying other accounts, because every account would fail the same way. Before surfacing a production Guardian 451, the service may try the manifest's healthy automatic relays (see [API relays](OPERATOR.md#guardian-returns-http-451-region_unavailable)); the original response is retained if none works. Other control-plane APIs and the default Firefox TLS/HTTP2 login recovery route are unchanged.
+- Transient network/server failures and HTTP 451 return without trying other accounts, because every account would fail the same way. Before surfacing a production Guardian 451, the core retries the same request once directly with a doubled leading slash (`//api/v1/fpn/...`): the edge's region rule matches the literal path, while the origin routes the doubled path to the same handler. If that still returns 451, the service may try the manifest's healthy automatic relays (see [API relays](OPERATOR.md#guardian-returns-http-451-region_unavailable)); the original response is retained if none works. Other control-plane APIs and the default Firefox TLS/HTTP2 login recovery route are unchanged.
 - Quota at the switch threshold, HTTP 429, a spent quota, an FxA sign-in requirement, or a persistent Guardian rejection move to the next usable account; see [MULTI-ACCOUNT.md](MULTI-ACCOUNT.md).
 - The quota monitor reads usage with `HEAD` and only fetches a pass when the active account must hand over. When a user clicks **Refresh quota** and Guardian refuses `HEAD` with HTTP 403, the service tries the normal pass `GET` once and reads only the quota headers. The current tunnel keeps its pass.
 - A CONNECT HTTP 429 is a transport-level error observation; it does not alone trigger immediate session reconstruction.
