@@ -255,7 +255,7 @@ type Network struct {
 	// APIRelay, when set, sends the control-plane requests (FxA, Guardian,
 	// the server list, the geo files, and flags) through the user's own
 	// relay: an https:// URL that takes the target in its url parameter
-	// (scripts/relay: a Cloudflare Worker or a PHP file). The VPN traffic
+	// (docs/relay: a Cloudflare Worker or a PHP file). The VPN traffic
 	// never uses it.
 	APIRelay string `json:"api_relay"`
 	// APIRelayEnabled uses APIRelay (APIRelayInUse): while off, the address

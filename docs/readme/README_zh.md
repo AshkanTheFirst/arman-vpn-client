@@ -45,7 +45,7 @@
 
 🔀 智能分流（Split Tunneling）：选择不通过 VPN 的网站和应用
 
-🧱 如果你的网络封锁了连接：TLS 分片、上游 SOCKS5 代理和中继服务器
+🧱 如果你的网络封锁了连接：TLS 分片、上游 SOCKS5 代理和[中继服务器](../relay/README.md)
 
 🔒 加密 DNS（DNS over HTTPS）
 

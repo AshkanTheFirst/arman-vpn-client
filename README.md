@@ -47,7 +47,7 @@ For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 
 🔀 Smart routing (split tunneling): choose the sites and apps that skip the VPN
 
-🧱 If your network blocks the connection: TLS fragmentation, upstream SOCKS5 proxy, and a relay server
+🧱 If your network blocks the connection: TLS fragmentation, upstream SOCKS5 proxy, and a [relay server](docs/relay/README.md)
 
 💾 Backup and import: your accounts and settings in one file, for another device or a server
 

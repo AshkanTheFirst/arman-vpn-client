@@ -128,7 +128,7 @@ flowchart LR
     Daemon --> Accounts
 ```
 
-The shared control-plane client serves FxA, Guardian, Remote Settings, the geo files, and flags; the user's own relay, `network.api_relay` (a Cloudflare Worker or a PHP file, [scripts/relay](../scripts/relay)) can carry its requests when Mozilla is not reached directly (`relayFallback` over `relayTransport`), with Encrypted Client Hello when `network.api_relay_ech` asks for it (`echDialer`, the key from `resolver.LookupECH`). H2/H3 sessions create their own data-plane connections. Fastly challenge handling applies to the account API only.
+The shared control-plane client serves FxA, Guardian, Remote Settings, the geo files, and flags; the user's own relay, `network.api_relay` (a Cloudflare Worker or a PHP file, [docs/relay](../../docs/relay)) can carry its requests when Mozilla is not reached directly (`relayFallback` over `relayTransport`), with Encrypted Client Hello when `network.api_relay_ech` asks for it (`echDialer`, the key from `resolver.LookupECH`). H2/H3 sessions create their own data-plane connections. Fastly challenge handling applies to the account API only.
 
 ## Service lifecycle
 

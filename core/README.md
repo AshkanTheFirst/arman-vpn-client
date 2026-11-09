@@ -45,12 +45,13 @@ Tests sit next to the code they cover (`<name>_test.go`). See [ARCHITECTURE.md](
 
 ## Documentation
 
-All maintained documentation is in English.
+The development guides are in English. The public relay setup guide is in Persian.
 
 | Document | Purpose |
 | --- | --- |
 | [Documentation index](doc/README.md) | Task routing and the complete development reference |
 | [Operator guide](doc/OPERATOR.md) | Running on Windows and Linux, systemd, troubleshooting |
+| [API relay setup](../docs/relay/README.md) | Persian setup guide and Cloudflare Worker/PHP examples |
 | [Dashboard](doc/DASHBOARD.md) | Pages, API, login, and request security |
 | [Multi-account mode](doc/MULTI-ACCOUNT.md) | Accounts, failover rules, data folder |
 | [Configuration](doc/CONFIGURATION.md) | `config.json` and the files in the data folder |

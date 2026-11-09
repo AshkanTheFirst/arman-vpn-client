@@ -248,7 +248,7 @@ var apiRelayTransport http.RoundTripper
 // and the method, headers, and body as they are; the relay forwards it and
 // answers with the target's response. The response keeps the original
 // request, so cookies and redirects resolve against the target. A relay
-// that refuses (scripts/relay set X-Relay-Error) is an error that names
+// that refuses (docs/relay sets X-Relay-Error) is an error that names
 // the relay.
 type relayTransport struct {
 	relay *url.URL
