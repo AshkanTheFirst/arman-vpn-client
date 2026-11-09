@@ -957,6 +957,16 @@ class AppLocalizationsBn extends AppLocalizations {
   String get sectionBypass => 'Mozilla অবরুদ্ধ থাকলে';
 
   @override
+  String get sharedRelay => 'শেয়ার করা রিলে';
+
+  @override
+  String get sharedRelayHint =>
+      'Mozilla আপনার অঞ্চল ব্লক করলে অ্যাপের শেয়ার করা রিলে ব্যবহার করুন। চালু থাকা ব্যক্তিগত রিলে অগ্রাধিকার পায়।';
+
+  @override
+  String get personalRelay => 'ব্যক্তিগত রিলে';
+
+  @override
   String get apiRelay => 'রিলে সার্ভার';
 
   @override

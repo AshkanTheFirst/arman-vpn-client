@@ -58,8 +58,8 @@ func configureDNS(cfg config.DNS) error {
 }
 
 // configureAPIRelay sends the control-plane requests through the user's
-// relay at n.APIRelay when they cannot go directly (relayFallback); empty
-// sends them directly only. Only the Firefox Accounts, Guardian,
+// relay at n.APIRelay when they cannot go directly (relayFallback). Shared
+// Guardian recovery has its own switch. Only the Firefox Accounts, Guardian,
 // server-list, geo-file, and flag requests are affected; the VPN traffic
 // keeps talking to Mozilla's proxy directly. n.APIRelayECH hides the
 // relay's name with Encrypted Client Hello (echDialer).
@@ -78,10 +78,10 @@ func configureAPIRelay(n config.Network) error {
 			return err
 		}
 	}
-	// An explicitly configured relay (including one switched off) takes
-	// precedence over the centrally managed Guardian-only fallback.
+	// An enabled personal relay takes precedence. Turning it off must not
+	// disable the independently configured shared Guardian-only fallback.
 	guardian.SetRegionRecovery(nil)
-	if n.APIRelayEnabled && strings.TrimSpace(n.APIRelay) == "" &&
+	if n.SharedRelayInUse() &&
 		(controlplane.UsesDefaultTransport() || controlplane.Transport() == apiRelayTransport) {
 		pool := newAutomaticRelays(n)
 		guardian.SetRegionRecovery(func(req *http.Request) (*http.Response, error) {

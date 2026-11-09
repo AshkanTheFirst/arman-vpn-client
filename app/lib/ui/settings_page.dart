@@ -700,39 +700,64 @@ class _SettingsPageState extends State<SettingsPage> {
   /// for the sign-in, accounts, and server list (network.api_relay). The
   /// core hides its name with Encrypted Client Hello by itself where the
   /// relay's name has a key (network.api_relay_ech, config.json only).
-  /// The switch (network.api_relay_enabled) keeps the address while the
-  /// requests go directly; without an address it stays off.
-  Widget _bypass(AppLocalizations l) => Panel(
-    title: l.sectionBypass,
-    icon: Icons.shield_outlined,
-    trailing: Semantics(
-      label: l.apiRelayUse,
-      child: Switch(
-        value:
-            _bool(['network', 'api_relay_enabled']) &&
-            _str(['network', 'api_relay']).isNotEmpty,
-        onChanged: _saving || _str(['network', 'api_relay']).isEmpty
-            ? null
-            : (on) => _save({
-                ['network', 'api_relay_enabled']: on,
-              }),
+  /// Personal and shared relays have independent switches. A personal
+  /// relay needs an address; shared recovery is available without one.
+  Widget _bypass(AppLocalizations l) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Panel(
+        title: l.sharedRelay,
+        icon: Icons.groups_outlined,
+        trailing: Semantics(
+          label: l.sharedRelay,
+          child: Switch(
+            value: _bool(['network', 'shared_relay_enabled']),
+            onChanged: _saving
+                ? null
+                : (on) => _save({
+                    ['network', 'shared_relay_enabled']: on,
+                  }),
+          ),
+        ),
+        child: Text(
+          l.sharedRelayHint,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
       ),
-    ),
-    child: _TextSetting(
-      label: l.apiRelay,
-      hint: l.apiRelayHint,
-      value: _str(['network', 'api_relay']),
-      validator: (v) {
-        final u = Uri.tryParse(v.trim());
-        return v.trim().isEmpty ||
-                (u != null && u.scheme == 'https' && u.host.isNotEmpty)
-            ? null
-            : l.apiRelayInvalid;
-      },
-      onSave: (v) => _save({
-        ['network', 'api_relay']: v.trim(),
-      }),
-    ),
+      const SizedBox(height: 16),
+      Panel(
+        title: l.personalRelay,
+        icon: Icons.shield_outlined,
+        trailing: Semantics(
+          label: l.apiRelayUse,
+          child: Switch(
+            value:
+                _bool(['network', 'api_relay_enabled']) &&
+                _str(['network', 'api_relay']).isNotEmpty,
+            onChanged: _saving || _str(['network', 'api_relay']).isEmpty
+                ? null
+                : (on) => _save({
+                    ['network', 'api_relay_enabled']: on,
+                  }),
+          ),
+        ),
+        child: _TextSetting(
+          label: l.apiRelay,
+          hint: l.apiRelayHint,
+          value: _str(['network', 'api_relay']),
+          validator: (v) {
+            final u = Uri.tryParse(v.trim());
+            return v.trim().isEmpty ||
+                    (u != null && u.scheme == 'https' && u.host.isNotEmpty)
+                ? null
+                : l.apiRelayInvalid;
+          },
+          onSave: (v) => _save({
+            ['network', 'api_relay']: v.trim(),
+          }),
+        ),
+      ),
+    ],
   );
 
   /// The way to Mozilla through the user's own SOCKS5 proxy, for a network

@@ -957,6 +957,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sectionBypass => 'إذا كانت Mozilla محجوبة';
 
   @override
+  String get sharedRelay => 'الترحيل المشترك';
+
+  @override
+  String get sharedRelayHint =>
+      'استخدم خوادم الترحيل المشتركة إذا حظرت موزيلا منطقتك. لخادم الترحيل الشخصي المفعّل الأولوية.';
+
+  @override
+  String get personalRelay => 'الترحيل الشخصي';
+
+  @override
   String get apiRelay => 'خادم الترحيل';
 
   @override

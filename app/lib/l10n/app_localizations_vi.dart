@@ -959,6 +959,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sectionBypass => 'Nếu Mozilla bị chặn';
 
   @override
+  String get sharedRelay => 'Chuyển tiếp dùng chung';
+
+  @override
+  String get sharedRelayHint =>
+      'Dùng máy chủ chuyển tiếp dùng chung của ứng dụng nếu Mozilla chặn khu vực của bạn. Máy chủ chuyển tiếp cá nhân đang bật được ưu tiên.';
+
+  @override
+  String get personalRelay => 'Chuyển tiếp cá nhân';
+
+  @override
   String get apiRelay => 'Máy chủ chuyển tiếp';
 
   @override

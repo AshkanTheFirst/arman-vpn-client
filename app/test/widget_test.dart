@@ -1476,7 +1476,8 @@ void main() {
     await tester.tap(find.text('Relay server'));
     await tester.pumpAndSettle();
 
-    expect(find.text('If Mozilla is blocked'), findsOneWidget);
+    expect(find.text('Shared relay'), findsOneWidget);
+    expect(find.text('Personal relay'), findsOneWidget);
     final field = find.widgetWithText(TextField, 'Relay server');
     // Save goes under the field on a computer too: long addresses need the width.
     final save = find.widgetWithText(FilledButton, 'Save');
@@ -1498,6 +1499,79 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     core.dispose();
   });
+
+  for (final size in [const Size(430, 1000), const Size(1200, 1400)]) {
+    testWidgets('shared and personal relay switches are independent at $size', (
+      tester,
+    ) async {
+      stillMotion(tester);
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final api = FakeApi();
+      api.config['network'] = <String, Object?>{
+        'api_relay_enabled': false,
+        'shared_relay_enabled': true,
+        'api_relay': '',
+      };
+      final core = CoreController(
+        () async => api,
+        pollInterval: const Duration(hours: 1),
+      );
+      await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+      core.start();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Settings'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Relay server'));
+      await tester.pumpAndSettle();
+      final shared = find.descendant(
+        of: find.widgetWithText(Panel, 'Shared relay'),
+        matching: find.byType(Switch),
+      );
+      final personal = find.descendant(
+        of: find.widgetWithText(Panel, 'Personal relay'),
+        matching: find.byType(Switch),
+      );
+      Map<String, Object?> network() =>
+          api.config['network']! as Map<String, Object?>;
+      expect(tester.widget<Switch>(shared).value, isTrue);
+      expect(tester.widget<Switch>(shared).onChanged, isNotNull);
+      expect(tester.widget<Switch>(personal).value, isFalse);
+      expect(tester.widget<Switch>(personal).onChanged, isNull);
+      await tester.tap(shared);
+      await tester.pumpAndSettle();
+      expect(network()['shared_relay_enabled'], isFalse);
+      expect(network()['api_relay_enabled'], isFalse);
+      await tester.tap(shared);
+      await tester.pumpAndSettle();
+      expect(network()['shared_relay_enabled'], isTrue);
+      final field = find.widgetWithText(TextField, 'Relay server');
+      await tester.ensureVisible(field);
+      await tester.enterText(field, 'https://personal.example/');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(personal);
+      await tester.tap(personal);
+      await tester.pumpAndSettle();
+      expect(network()['api_relay_enabled'], isTrue);
+      expect(network()['shared_relay_enabled'], isTrue);
+      await tester.ensureVisible(shared);
+      await tester.tap(shared);
+      await tester.pumpAndSettle();
+      expect(network()['shared_relay_enabled'], isFalse);
+      expect(network()['api_relay_enabled'], isTrue);
+      await tester.ensureVisible(personal);
+      await tester.tap(personal);
+      await tester.pumpAndSettle();
+      expect(network()['api_relay_enabled'], isFalse);
+      expect(network()['shared_relay_enabled'], isFalse);
+      expect(network()['api_relay'], 'https://personal.example/');
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      core.dispose();
+    });
+  }
 
   testWidgets('the IP version is Auto until another is chosen', (tester) async {
     stillMotion(tester);

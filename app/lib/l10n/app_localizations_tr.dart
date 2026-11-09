@@ -958,6 +958,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sectionBypass => 'Mozilla engelliyse';
 
   @override
+  String get sharedRelay => 'Paylaşılan aktarıcı';
+
+  @override
+  String get sharedRelayHint =>
+      'Mozilla bölgenizi engellerse uygulamanın paylaşılan aktarıcılarını kullanın. Etkin kişisel aktarıcı önceliklidir.';
+
+  @override
+  String get personalRelay => 'Kişisel aktarıcı';
+
+  @override
   String get apiRelay => 'Aktarma sunucusu';
 
   @override

@@ -952,6 +952,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get sectionBypass => 'اگر موزیلا مسدود است';
 
   @override
+  String get sharedRelay => 'رله اشتراکی';
+
+  @override
+  String get sharedRelayHint =>
+      'اگر موزیلا دسترسی از منطقه شما را محدود کرده، از رله‌های اشتراکی برنامه استفاده می‌شود. رله شخصیِ فعال در اولویت است.';
+
+  @override
+  String get personalRelay => 'رله شخصی';
+
+  @override
   String get apiRelay => 'سرور رله';
 
   @override

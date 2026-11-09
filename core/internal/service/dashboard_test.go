@@ -273,6 +273,32 @@ func TestDashboardSettingsValidateAndApply(t *testing.T) {
 	}
 }
 
+func TestDashboardRelaySwitchesSaveIndependently(t *testing.T) {
+	d := newTestDaemon(t)
+	t.Cleanup(func() { guardian.SetRegionRecovery(nil) })
+	c := newDashboardClient(t, d)
+	settings := decodeBody[settingsView](t, c.do(http.MethodGet, "/api/settings", nil))
+	for _, shared := range []bool{false, true} {
+		cfg := settings.Config
+		cfg.Network.APIRelayEnabled = false
+		cfg.Network.APIRelay = "https://personal.example/"
+		cfg.Network.SharedRelayEnabled = shared
+		if rec := c.do(http.MethodPut, "/api/settings", map[string]any{"config": cfg}); rec.Code != http.StatusOK {
+			t.Fatal("relay switches could not be saved")
+		}
+		view := decodeBody[settingsView](t, c.do(http.MethodGet, "/api/settings", nil))
+		saved, _, err := config.Load(d.paths.Config)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, n := range []config.Network{view.Config.Network, saved.Network} {
+			if n.APIRelayEnabled || n.SharedRelayEnabled != shared || n.SharedRelayInUse() != shared || n.APIRelay != cfg.Network.APIRelay {
+				t.Fatal("shared relay did not remain independent from the disabled personal relay")
+			}
+		}
+	}
+}
+
 // An account whose quota reset has passed stops showing as used up by itself,
 // with no request to read it again.
 func TestAPassedResetShowsWithoutARefresh(t *testing.T) {

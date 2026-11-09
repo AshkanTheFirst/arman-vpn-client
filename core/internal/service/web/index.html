@@ -608,7 +608,12 @@
                 <div class="set-list">
                   <div class="set-row">
                     <span class="set-ic"><svg><use href="#i-swap"/></svg></span>
-                    <span class="set-text"><label for="f-relay-on">Use the relay server</label><small>Off: the address below stays, and the requests go only directly.</small></span>
+                    <span class="set-text"><label for="f-shared-relay-on">Shared relay</label><small>Use the app's shared relays if Mozilla blocks your region. An enabled personal relay takes priority.</small></span>
+                    <span class="set-ctl"><label class="switch"><input type="checkbox" id="f-shared-relay-on" name="network.shared_relay_enabled"><span></span></label></span>
+                  </div>
+                  <div class="set-row">
+                    <span class="set-ic"><svg><use href="#i-swap"/></svg></span>
+                    <span class="set-text"><label for="f-relay-on">Personal relay</label><small>Turning this off keeps your address and does not disable shared relays.</small></span>
                     <span class="set-ctl"><label class="switch"><input type="checkbox" id="f-relay-on" name="network.api_relay_enabled"><span></span></label></span>
                   </div>
                   <div class="set-row">

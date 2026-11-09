@@ -967,6 +967,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sectionBypass => 'Si Mozilla está bloqueado';
 
   @override
+  String get sharedRelay => 'Relé compartido';
+
+  @override
+  String get sharedRelayHint =>
+      'Usar los relés compartidos de la aplicación si Mozilla bloquea tu región. Un relé personal activado tiene prioridad.';
+
+  @override
+  String get personalRelay => 'Relé personal';
+
+  @override
   String get apiRelay => 'Servidor de retransmisión';
 
   @override

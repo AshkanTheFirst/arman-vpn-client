@@ -961,6 +961,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionBypass => 'If Mozilla is blocked';
 
   @override
+  String get sharedRelay => 'Shared relay';
+
+  @override
+  String get sharedRelayHint =>
+      'Use the app\'s shared relays if Mozilla blocks your region. An enabled personal relay takes priority.';
+
+  @override
+  String get personalRelay => 'Personal relay';
+
+  @override
   String get apiRelay => 'Relay server';
 
   @override

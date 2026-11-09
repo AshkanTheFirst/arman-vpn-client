@@ -965,6 +965,16 @@ class AppLocalizationsHu extends AppLocalizations {
   String get sectionBypass => 'Ha a Mozilla le van tiltva';
 
   @override
+  String get sharedRelay => 'Megosztott átjátszó';
+
+  @override
+  String get sharedRelayHint =>
+      'Az alkalmazás megosztott átjátszóinak használata, ha a Mozilla blokkolja a régiót. Az engedélyezett saját átjátszó elsőbbséget élvez.';
+
+  @override
+  String get personalRelay => 'Saját átjátszó';
+
+  @override
   String get apiRelay => 'Közvetítő szerver';
 
   @override

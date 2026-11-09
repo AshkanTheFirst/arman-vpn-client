@@ -45,7 +45,7 @@ func TestAutomaticRelayKeepsCustomControlPlaneIsolated(t *testing.T) {
 			if before {
 				controlplane.SetTransport(fixture)
 			}
-			if err := configureAPIRelay(config.Network{APIRelayEnabled: true, APIRelayECH: config.RelayECHOff}); err != nil {
+			if err := configureAPIRelay(config.Network{SharedRelayEnabled: true, APIRelayECH: config.RelayECHOff}); err != nil {
 				t.Fatal(err)
 			}
 			if !before {

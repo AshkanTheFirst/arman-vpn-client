@@ -959,6 +959,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get sectionBypass => 'Jika Mozilla diblokir';
 
   @override
+  String get sharedRelay => 'Relai bersama';
+
+  @override
+  String get sharedRelayHint =>
+      'Gunakan relai bersama aplikasi jika Mozilla memblokir wilayah Anda. Relai pribadi yang aktif diprioritaskan.';
+
+  @override
+  String get personalRelay => 'Relai pribadi';
+
+  @override
   String get apiRelay => 'Server relay';
 
   @override

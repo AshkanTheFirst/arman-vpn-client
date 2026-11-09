@@ -959,6 +959,16 @@ class AppLocalizationsAz extends AppLocalizations {
   String get sectionBypass => 'Mozilla bloklanıbsa';
 
   @override
+  String get sharedRelay => 'Paylaşılan rele';
+
+  @override
+  String get sharedRelayHint =>
+      'Mozilla regionunuzu bloklayarsa tətbiqin paylaşılan relelərindən istifadə edin. Aktiv şəxsi rele üstünlük təşkil edir.';
+
+  @override
+  String get personalRelay => 'Şəxsi rele';
+
+  @override
   String get apiRelay => 'Relay serveri';
 
   @override
