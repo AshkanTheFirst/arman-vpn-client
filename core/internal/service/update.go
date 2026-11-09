@@ -36,19 +36,26 @@ func (d *Daemon) UpdateTransports() []http.RoundTripper {
 	return append(out, controlplane.Transport())
 }
 
-// handleUpdateDownload starts downloading {"version": "1.2.3"}.
+// handleUpdateDownload accepts a version and an optional manifest source.
 func (s *dashboardServer) handleUpdateDownload(w http.ResponseWriter, r *http.Request) {
 	m := s.updater(w, r)
 	if m == nil {
 		return
 	}
 	var in struct {
-		Version string `json:"version"`
+		Version string         `json:"version"`
+		Source  *update.Source `json:"source,omitempty"`
 	}
 	if !readJSON(w, r, &in) {
 		return
 	}
-	if err := m.Download(in.Version); err != nil {
+	var err error
+	if in.Source == nil {
+		err = m.Download(in.Version)
+	} else {
+		err = m.DownloadFrom(in.Version, *in.Source)
+	}
+	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}

@@ -319,6 +319,7 @@
   "checkingUpdates": "Đang kiểm tra…",
   "upToDate": "Bạn đang dùng phiên bản mới nhất.",
   "updateAvailable": "Đã có phiên bản mới {version}.",
+  "updateRequired": "Vui lòng cập nhật lên phiên bản {version}. Bản cập nhật này là bắt buộc.",
   "download": "Tải xuống",
   "updateCheckFailed": "Không thể kiểm tra cập nhật: {error}",
   "updateCheckNoNetwork": "Không thể kết nối tới GitHub. Hãy kiểm tra kết nối internet và thử lại.",

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../app_settings.dart';
 import 'core_api.dart';
 
 /// An app installed on the phone.
@@ -86,9 +87,41 @@ class VpnNotAllowed implements Exception {
 class AndroidCore {
   static const _channel = MethodChannel('app/android');
 
+  /// A Quick Settings long-press returns the existing UI to Home.
+  static final homeRequests = ValueNotifier<int>(0);
+
+  static void listenForHomeRequests() {
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'openHome') homeRequests.value++;
+    });
+  }
+
   /// The core's data folder inside the app's private storage.
   static Future<String> dataDir() async =>
       await _channel.invokeMethod<String>('dataDir') ?? '';
+
+  /// Only a new installation asks Android for country codes. It does not
+  /// read persistent identifiers, change the language, or modify saved routing.
+  static Future<void> prepareFirstRunRouting(
+    AppSettings settings, {
+    String? systemCountry,
+  }) async {
+    if (!settings.firstRun) return;
+    Map<String, String>? countries;
+    try {
+      countries = await _channel
+          .invokeMapMethod<String, String>('routingCountries')
+          .timeout(const Duration(seconds: 2));
+    } on Exception {
+      // No telephony, an unavailable platform service, or a failed call:
+      // the system country still supplies a language-independent fallback.
+    }
+    settings.firstRunRegion = AppSettings.regionForCountries([
+      countries?['network_country'],
+      countries?['sim_country'],
+      systemCountry,
+    ]);
+  }
 
   AndroidCore(this._dataDir);
 

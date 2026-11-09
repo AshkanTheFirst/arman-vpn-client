@@ -2037,6 +2037,12 @@ abstract class AppLocalizations {
   /// **'Version {version} is available.'**
   String updateAvailable(String version);
 
+  /// No description provided for @updateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please update to version {version}. This update is required.'**
+  String updateRequired(String version);
+
   /// No description provided for @download.
   ///
   /// In en, this message translates to:

@@ -319,6 +319,7 @@
   "checkingUpdates": "Memeriksa…",
   "upToDate": "Anda memiliki versi terbaru.",
   "updateAvailable": "Versi {version} tersedia.",
+  "updateRequired": "Perbarui ke versi {version}. Pembaruan ini diperlukan.",
   "download": "Unduh",
   "updateCheckFailed": "Tidak dapat memeriksa pembaruan: {error}",
   "updateCheckNoNetwork": "Tidak dapat menghubungi GitHub. Periksa koneksi internet Anda lalu coba lagi.",

@@ -319,6 +319,7 @@
   "checkingUpdates": "যাচাই হচ্ছে…",
   "upToDate": "আপনার কাছে সর্বশেষ সংস্করণ আছে।",
   "updateAvailable": "সংস্করণ {version} পাওয়া যাচ্ছে।",
+  "updateRequired": "অনুগ্রহ করে {version} সংস্করণে আপডেট করুন। এই আপডেটটি প্রয়োজন।",
   "download": "ডাউনলোড",
   "updateCheckFailed": "আপডেট যাচাই করা যায়নি: {error}",
   "updateCheckNoNetwork": "GitHub-এ পৌঁছানো যায়নি। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।",

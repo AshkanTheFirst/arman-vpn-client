@@ -81,7 +81,7 @@ type backupContents struct {
 
 // backupFileName is the name a backup is saved under.
 func backupFileName(now time.Time) string {
-	return "Arman-VPN-backup-" + now.Format("2006-01-02") + ".zip"
+	return "Arman-VPN-backup-" + now.Format("2006-01-02_15-04-05") + ".zip"
 }
 
 // writeBackup writes the data folder to w as a zip file.

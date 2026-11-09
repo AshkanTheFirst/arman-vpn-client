@@ -2,7 +2,7 @@ name: arman_vpn
 description: "Cross-platform shell for the Go VPN core"
 publish_to: 'none'
 
-version: 1.0.14+135
+version: 1.0.15+136
 
 environment:
   sdk: ^3.13.5
@@ -40,8 +40,18 @@ flutter:
     # Country flags from flag-icons (MIT, assets/flags/LICENSE), the same
     # SVG files as the core's web dashboard.
     - assets/flags/
+    - assets/fonts/Inter/OFL.txt
 
   fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter/Inter-Regular.ttf
+        - asset: assets/fonts/Inter/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter/Inter-Bold.ttf
+          weight: 700
     # Vazirmatn (SIL Open Font License 1.1, assets/fonts/OFL.txt) for Persian.
     - family: Vazirmatn
       fonts:

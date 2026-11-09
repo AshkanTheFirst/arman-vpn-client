@@ -319,6 +319,7 @@
   "checkingUpdates": "جارٍ التحقق…",
   "upToDate": "لديك أحدث إصدار.",
   "updateAvailable": "الإصدار {version} متاح.",
+  "updateRequired": "يرجى التحديث إلى الإصدار {version}. هذا التحديث ضروري.",
   "download": "تنزيل",
   "updateCheckFailed": "تعذّر التحقق من التحديثات: {error}",
   "updateCheckNoNetwork": "تعذّر الوصول إلى GitHub. تحقّق من اتصالك بالإنترنت وحاول مرة أخرى.",

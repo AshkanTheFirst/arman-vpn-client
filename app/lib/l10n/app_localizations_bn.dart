@@ -1102,6 +1102,11 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return 'অনুগ্রহ করে $version সংস্করণে আপডেট করুন। এই আপডেটটি প্রয়োজন।';
+  }
+
+  @override
   String get download => 'ডাউনলোড';
 
   @override

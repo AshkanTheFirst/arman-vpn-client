@@ -1113,6 +1113,11 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return 'Frissíts a(z) $version verzióra. Ez a frissítés szükséges.';
+  }
+
+  @override
   String get download => 'Letöltés';
 
   @override

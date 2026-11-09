@@ -15,6 +15,7 @@ import (
 
 	"github.com/armanlife/arman-vpn-client/core/internal/config"
 	"github.com/armanlife/arman-vpn-client/core/internal/controlplane"
+	"github.com/armanlife/arman-vpn-client/core/internal/guardian"
 	"github.com/armanlife/arman-vpn-client/core/internal/hellosplit"
 	"github.com/armanlife/arman-vpn-client/core/internal/logx"
 	"github.com/armanlife/arman-vpn-client/core/internal/resolver"
@@ -72,6 +73,18 @@ func configureAPIRelay(n config.Network) error {
 		logx.Info("connections to Mozilla and the control plane go through the upstream proxy=%s", proxyAddress)
 	}
 	raw := strings.TrimSpace(n.APIRelayInUse())
+	if raw != "" {
+		if err := config.ValidateRelay(raw); err != nil {
+			return err
+		}
+	}
+	// An explicitly configured relay (including one switched off) takes
+	// precedence over the centrally managed Guardian-only fallback.
+	guardian.SetRegionRecovery(nil)
+	if n.APIRelayEnabled && strings.TrimSpace(n.APIRelay) == "" &&
+		(controlplane.UsesDefaultTransport() || controlplane.Transport() == apiRelayTransport) {
+		guardian.SetRegionRecovery(newAutomaticRelays(n).recover)
+	}
 	if raw == "" {
 		// Only a relay this function set is taken away: another transport
 		// (a test's fixture) stays, so starting a daemon never sends a
@@ -81,9 +94,6 @@ func configureAPIRelay(n config.Network) error {
 		}
 		apiRelayTransport = nil
 		return nil
-	}
-	if err := config.ValidateRelay(raw); err != nil {
-		return err
 	}
 	relay, _ := url.Parse(raw)
 	dialer := resolverDialer{timeout: apiRelayDialTimeout}

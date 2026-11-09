@@ -319,6 +319,7 @@
   "checkingUpdates": "Yoxlanılır…",
   "upToDate": "Ən son versiyadan istifadə edirsiniz.",
   "updateAvailable": "{version} versiyası mövcuddur.",
+  "updateRequired": "Zəhmət olmasa {version} versiyasına yeniləyin. Bu yeniləmə tələb olunur.",
   "download": "Yüklə",
   "updateCheckFailed": "Yeniləmələri yoxlamaq mümkün olmadı: {error}",
   "updateCheckNoNetwork": "GitHub-a qoşulmaq mümkün olmadı. İnternet bağlantınızı yoxlayın və yenidən cəhd edin.",

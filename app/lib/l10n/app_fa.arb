@@ -319,6 +319,7 @@
   "checkingUpdates": "در حال بررسی…",
   "upToDate": "آخرین نسخه را دارید.",
   "updateAvailable": "نسخه {version} منتشر شده است.",
+  "updateRequired": "لطفاً به نسخه {version} به‌روزرسانی کنید. این به‌روزرسانی ضروری است.",
   "download": "دانلود",
   "updateCheckFailed": "بررسی به‌روزرسانی ممکن نشد: {error}",
   "updateCheckNoNetwork": "اتصال به GitHub برقرار نشد. اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.",

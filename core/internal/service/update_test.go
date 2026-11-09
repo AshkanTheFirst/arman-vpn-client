@@ -44,6 +44,9 @@ func TestUpdatesNeedTheLocalTokenAndAnUpdater(t *testing.T) {
 	if rec := send("/api/update/download", d.localToken, `{"version":"0.9.0"}`); rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), "not newer") {
 		t.Fatalf("an older version: %d %s", rec.Code, rec.Body.String())
 	}
+	if rec := send("/api/update/download", d.localToken, `{"version":"1.2.3","source":{"file":"../package.zip","url":"https://example.com/package","checksums_url":"https://example.com/sums","signature_url":"https://example.com/sig"}}`); rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), "file name") {
+		t.Fatalf("unsafe manifest source: %d %s", rec.Code, rec.Body.String())
+	}
 	if rec := send("/api/update/install", d.localToken, `{"version":"1.2.3","pid":1}`); rec.Code != http.StatusConflict || !strings.Contains(rec.Body.String(), "not downloaded") {
 		t.Fatalf("a version not downloaded: %d %s", rec.Code, rec.Body.String())
 	}

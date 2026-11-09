@@ -1098,6 +1098,11 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return 'لطفاً به نسخه $version به‌روزرسانی کنید. این به‌روزرسانی ضروری است.';
+  }
+
+  @override
   String get download => 'دانلود';
 
   @override

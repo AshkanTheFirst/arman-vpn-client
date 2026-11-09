@@ -25,7 +25,7 @@ class _WelcomePageState extends State<WelcomePage> {
   late String _language;
   late String _region;
 
-  /// The region follows the language until the user picks one.
+  /// A manual region choice always wins over desktop language suggestions.
   bool _regionPicked = false;
   bool _saving = false;
 
@@ -36,13 +36,15 @@ class _WelcomePageState extends State<WelcomePage> {
     _language = widget.settings.language.isNotEmpty
         ? widget.settings.language
         : AppSettings.languageFor(system);
-    _region = AppSettings.suggestedRegion(_language, system.countryCode);
+    _region =
+        widget.settings.firstRunRegion ??
+        AppSettings.suggestedRegion(_language, system.countryCode);
   }
 
   void _pickLanguage(String language) {
     setState(() {
       _language = language;
-      if (!_regionPicked) {
+      if (widget.settings.firstRunRegion == null && !_regionPicked) {
         _region = AppSettings.regionForLanguage(language) ?? _region;
       }
     });

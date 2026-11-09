@@ -187,6 +187,9 @@ func Transport() http.RoundTripper {
 	return client.Transport
 }
 
+// UsesDefaultTransport reports whether no external transport has been installed.
+func UsesDefaultTransport() bool { return client.Transport == defaultTransport }
+
 // Do sends req with the shared control plane client.
 func Do(req *http.Request) (*http.Response, error) {
 	return client.Do(req)

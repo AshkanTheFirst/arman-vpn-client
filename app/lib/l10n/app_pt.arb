@@ -319,6 +319,7 @@
   "checkingUpdates": "Verificando…",
   "upToDate": "Você tem a versão mais recente.",
   "updateAvailable": "A versão {version} está disponível.",
+  "updateRequired": "Atualize para a versão {version}. Esta atualização é necessária.",
   "download": "Baixar",
   "updateCheckFailed": "Não foi possível verificar atualizações: {error}",
   "updateCheckNoNetwork": "Não foi possível acessar o GitHub. Verifique sua conexão com a internet e tente novamente.",

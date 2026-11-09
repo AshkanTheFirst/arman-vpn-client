@@ -1073,6 +1073,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return '请更新至 $version 版本。此更新为必要更新。';
+  }
+
+  @override
   String get download => '下载';
 
   @override
@@ -2647,6 +2652,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String updateAvailable(String version) {
     return '已有新版本 $version。';
+  }
+
+  @override
+  String updateRequired(String version) {
+    return '請更新至 $version 版本。此更新為必要更新。';
   }
 
   @override

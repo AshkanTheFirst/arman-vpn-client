@@ -1104,6 +1104,11 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return 'Lütfen $version sürümüne güncelleyin. Bu güncelleme gereklidir.';
+  }
+
+  @override
   String get download => 'İndir';
 
   @override

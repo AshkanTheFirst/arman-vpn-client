@@ -27,6 +27,11 @@ class AppSettings extends ChangeNotifier {
   /// True until the user finished the welcome page.
   bool firstRun = false;
 
+  /// Android's first-run routing suggestion, prepared before the welcome
+  /// page opens. Empty means no region; null keeps desktop suggestions.
+  /// This is derived locally for this run and is not saved as a preference.
+  String? firstRunRegion;
+
   /// Shows the public IP (the address websites see). Off by default: the
   /// location is shown by its country either way.
   bool showPublicIp = false;
@@ -46,6 +51,11 @@ class AppSettings extends ChangeNotifier {
   DateTime? updateCheckedAt;
   String updateVersion = '';
   String updateUrl = '';
+  Map<String, Object?> updateDetails = const {};
+  List<Map<String, Object?>> announcementCache = const [];
+  Map<String, int> announcementSeen = const {};
+  Map<String, int> announcementAcknowledged = const {};
+  Future<void> _saveTail = Future.value();
 
   /// Starts the app in the tray when the user signs in to Windows; on
   /// unless the user turned it off.
@@ -127,6 +137,18 @@ class AppSettings extends ChangeNotifier {
   /// The core's routing regions (`routing.region`); empty is none.
   static const regions = ['ir', 'cn', 'ru', 'af', 'tr', 'id', 'br', ''];
 
+  /// Prefer the current network country, then the SIM's country, then the
+  /// system country. A known unsupported country means no regional bypass:
+  /// an Iranian SIM roaming in another country must not imply Iran.
+  static String regionForCountries(Iterable<String?> countries) {
+    for (final value in countries) {
+      final country = (value ?? '').trim().toLowerCase();
+      if (!RegExp(r'^[a-z]{2}$').hasMatch(country)) continue;
+      return regions.contains(country) ? country : '';
+    }
+    return '';
+  }
+
   Locale? get locale => language.isEmpty ? null : localeOf(language);
 
   /// The routing region most users of [language] want: Persian is Iran,
@@ -173,6 +195,20 @@ class AppSettings extends ChangeNotifier {
         if (j['dismissed_update'] case final String v) s.dismissedUpdate = v;
         if (j['update_version'] case final String v) s.updateVersion = v;
         if (j['update_url'] case final String v) s.updateUrl = v;
+        if (j['update_details'] case final Map<String, Object?> v) {
+          s.updateDetails = v;
+        }
+        if (j['announcement_cache'] case final List<Object?> v) {
+          s.announcementCache = v.whereType<Map<String, Object?>>().toList();
+        }
+        Map<String, int> history(Object? v) => v is Map<String, Object?>
+            ? {
+                for (final e in v.entries)
+                  if (e.value is int) e.key: e.value! as int,
+              }
+            : {};
+        s.announcementSeen = history(j['announcement_seen']);
+        s.announcementAcknowledged = history(j['announcement_acknowledged']);
         s.updateCheckedAt = switch (j['update_checked_at']) {
           final String t => DateTime.tryParse(t),
           _ => null,
@@ -209,6 +245,10 @@ class AppSettings extends ChangeNotifier {
     DateTime? updateCheckedAt,
     String? updateVersion,
     String? updateUrl,
+    Map<String, Object?>? updateDetails,
+    List<Map<String, Object?>>? announcementCache,
+    Map<String, int>? announcementSeen,
+    Map<String, int>? announcementAcknowledged,
     bool? autostart,
     bool? autoConnect,
     bool? udpNotice,
@@ -225,13 +265,18 @@ class AppSettings extends ChangeNotifier {
     this.updateCheckedAt = updateCheckedAt ?? this.updateCheckedAt;
     this.updateVersion = updateVersion ?? this.updateVersion;
     this.updateUrl = updateUrl ?? this.updateUrl;
+    this.updateDetails = updateDetails ?? this.updateDetails;
+    this.announcementCache = announcementCache ?? this.announcementCache;
+    this.announcementSeen = announcementSeen ?? this.announcementSeen;
+    this.announcementAcknowledged =
+        announcementAcknowledged ?? this.announcementAcknowledged;
     this.firstRun = firstRun ?? this.firstRun;
     this.language = language ?? this.language;
     this.themeMode = themeMode ?? this.themeMode;
     this.closeAction = closeAction ?? this.closeAction;
     this.signInMethod = signInMethod ?? this.signInMethod;
     notifyListeners();
-    _save();
+    _saveTail = _saveTail.then((_) => _save());
   }
 
   Future<void> _save() async {
@@ -252,6 +297,10 @@ class AppSettings extends ChangeNotifier {
           'update_checked_at': updateCheckedAt?.toIso8601String(),
           'update_version': updateVersion,
           'update_url': updateUrl,
+          'update_details': updateDetails,
+          'announcement_cache': announcementCache,
+          'announcement_seen': announcementSeen,
+          'announcement_acknowledged': announcementAcknowledged,
           'autostart': autostart,
           'auto_connect': autoConnect,
           'udp_notice': udpNotice,

@@ -165,16 +165,21 @@ there with 404), for example `JAVA_TOOL_OPTIONS="-Dhttps.proxyHost=127.0.0.1
 
 ## Languages and first run
 
-English, Persian (right to left, Vazirmatn font under the SIL Open Font
+English (bundled Inter UI font), Persian (right to left, Vazirmatn font under the SIL Open Font
 License, `assets/fonts/OFL.txt`, dates in the Solar Hijri calendar),
 Chinese, and Russian. Strings are in
 `lib/l10n/app_*.arb`; `flutter gen-l10n` (or any build) generates
 `lib/l10n/app_localizations*.dart`.
 
 The first run shows a welcome page: language and country. The country is
-the core's routing region (`routing.region`): Persian suggests Iran,
-Chinese China, Russian Russia, and other languages the system's country.
-Changing the language later offers the matching region.
+the core's routing region (`routing.region`). Android suggests it from the
+mobile network, SIM, then system country, independently of the UI language;
+the user can override it before continuing. This runs only during initial
+setup and needs no phone-state or location permission. Later Android language
+changes leave routing alone. Desktop suggestions still follow the language:
+Persian suggests Iran, Chinese China, Russian Russia, and other languages
+the system's country; changing the language later offers the matching region.
+See [Routing](../core/doc/CONFIGURATION.md#routing) for the selection rules.
 
 ## Icons
 

@@ -25,6 +25,12 @@ class _AboutPageState extends State<AboutPage> {
   String? _result;
   Release? _release;
 
+  @override
+  void initState() {
+    super.initState();
+    _release = Updates.available.value;
+  }
+
   Future<void> _check() async {
     final l = AppLocalizations.of(context);
     if (githubRepo.isEmpty) {
@@ -38,25 +44,31 @@ class _AboutPageState extends State<AboutPage> {
     });
     try {
       final release = await checkForUpdate(
+        check: UpdateCheck.manual,
         proxy: updateProxy(widget.core.status),
+        onAnnouncements: Updates.receiveAnnouncements,
       );
-      Updates.found(release);
+      Updates.found(release, check: UpdateCheck.manual);
       if (!mounted) return;
       setState(() {
         _release = release;
         _result = release == null
             ? l.upToDate
+            : release.mandatory
+            ? l.updateRequired(release.version)
             : l.updateAvailable(release.version);
       });
     } on Exception catch (e) {
       // No connection, a timeout, or a refused handshake: say so in words,
       // not as the exception's text.
-      final network = e is SocketException ||
-          e is TimeoutException ||
-          e is TlsException;
+      final network =
+          e is SocketException || e is TimeoutException || e is TlsException;
       if (mounted) {
-        setState(() => _result =
-            network ? l.updateCheckNoNetwork : l.updateCheckFailed('$e'));
+        setState(
+          () => _result = network
+              ? l.updateCheckNoNetwork
+              : l.updateCheckFailed('$e'),
+        );
       }
     } finally {
       if (mounted) setState(() => _checking = false);

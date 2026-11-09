@@ -260,7 +260,8 @@ type Network struct {
 	APIRelay string `json:"api_relay"`
 	// APIRelayEnabled uses APIRelay (APIRelayInUse): while off, the address
 	// stays set and the requests go directly. On by default, so a relay set
-	// before this setting existed stays in use.
+	// before this setting existed stays in use. When on with no manual URL,
+	// Guardian HTTP 451 may use the manifest's health-checked relay pool.
 	APIRelayEnabled bool `json:"api_relay_enabled"`
 	// APIRelayECH hides the relay's name from the network with Encrypted
 	// Client Hello (TLS 1.3): "on" (or empty: with ECH when the relay's

@@ -319,6 +319,7 @@
   "checkingUpdates": "Kontrol ediliyor…",
   "upToDate": "En son sürümü kullanıyorsunuz.",
   "updateAvailable": "{version} sürümü mevcut.",
+  "updateRequired": "Lütfen {version} sürümüne güncelleyin. Bu güncelleme gereklidir.",
   "download": "İndir",
   "updateCheckFailed": "Güncellemeler kontrol edilemedi: {error}",
   "updateCheckNoNetwork": "GitHub'a ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.",

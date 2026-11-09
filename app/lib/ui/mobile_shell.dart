@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../app_settings.dart';
+import '../core/android_core.dart';
 import '../core/core_controller.dart';
 import '../l10n/app_localizations.dart';
 import 'about_page.dart';
+import 'announcement_panel.dart';
 import 'accounts_page.dart';
 import 'logs_page.dart';
 import 'overview_page.dart';
@@ -40,6 +42,20 @@ class MobileShell extends StatefulWidget {
 
 class _MobileShellState extends State<MobileShell> {
   int _tab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    AndroidCore.homeRequests.addListener(_openHome);
+  }
+
+  void _openHome() => setState(() => _tab = 0);
+
+  @override
+  void dispose() {
+    AndroidCore.homeRequests.removeListener(_openHome);
+    super.dispose();
+  }
 
   /// Opens [page] under a top bar named [title]; it follows the core.
   void _push(String title, Widget Function() page) {
@@ -125,11 +141,16 @@ class _MobileShellState extends State<MobileShell> {
         body: SafeArea(
           // The home page's hero reaches under the status bar.
           top: _tab != 0 || widget.noCore != null || widget.banner != null,
-          child: Column(
-            children: [
-              ?widget.banner,
-              Expanded(child: page),
-            ],
+          child: AnnouncementOverlay(
+            settings: settings,
+            onOpenUpdates: () =>
+                _push(l.checkUpdates, () => AboutPage(core: core)),
+            child: Column(
+              children: [
+                ?widget.banner,
+                Expanded(child: page),
+              ],
+            ),
           ),
         ),
         bottomNavigationBar: _themed(

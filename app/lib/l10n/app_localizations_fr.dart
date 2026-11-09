@@ -1114,6 +1114,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return 'Veuillez passer à la version $version. Cette mise à jour est nécessaire.';
+  }
+
+  @override
   String get download => 'Télécharger';
 
   @override

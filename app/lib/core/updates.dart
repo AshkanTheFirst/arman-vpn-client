@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../app_info.dart';
 import '../app_settings.dart';
 import 'android_core.dart';
+import 'announcements.dart';
 import 'core_api.dart';
 import 'core_controller.dart';
 import 'models.dart';
@@ -19,7 +20,37 @@ const _apkAbis = {'arm64-v8a', 'armeabi-v7a', 'x86_64'};
 /// phone the APK for its processor; on Windows the installer for an
 /// installed copy (its uninstaller is beside it) and the zip for a portable
 /// one; on macOS the disk image; on Linux the archive for the processor.
-Future<String> downloadUrl(Release release) async {
+Future<String> downloadUrl(
+  Release release, {
+  String? os,
+  String? abi,
+  bool? installed,
+  String? platformVersion,
+}) async {
+  final system = os ?? Platform.operatingSystem;
+  if (release.downloads.isNotEmpty) {
+    final String key;
+    switch (system) {
+      case 'android':
+        final cpu = abi ?? await AndroidCore.abi().catchError((Object _) => '');
+        key = release.downloads.containsKey(cpu) ? cpu : 'universal';
+      case 'windows':
+        final dir = File(Platform.resolvedExecutable).parent.path;
+        final setup =
+            installed ??
+            File('$dir${Platform.pathSeparator}unins000.exe').existsSync();
+        key = setup ? 'installer-x64' : 'archive-x64';
+      case 'macos':
+        key = 'installer';
+      default:
+        key = archiveKey(system, platformVersion ?? Platform.version);
+    }
+    final asset = release.downloads[key];
+    if (asset == null) {
+      throw const FormatException('No download for this system');
+    }
+    return asset.url;
+  }
   if (!release.url.contains('/releases/tag/')) return release.url;
   final String name;
   if (Platform.isAndroid) {
@@ -75,7 +106,8 @@ String? updateProxy(CoreStatus? status) {
 /// the last look that worked. What it finds is kept in the settings, so the
 /// home page shows it after a restart too; the computer also shows a
 /// notification while the window is in the tray. The About page looks at
-/// once, whenever asked.
+/// once, whenever asked. Android's daily check uses stable, while
+/// About asks for latest without delaying its next daily check.
 ///
 /// The desktop apps (Windows, Linux, macOS) install it themselves (their
 /// core: core/internal/update): Update downloads it through the VPN while it
@@ -90,6 +122,7 @@ abstract final class Updates {
 
   /// The newer release, once one was found.
   static final available = ValueNotifier<Release?>(null);
+  static final announcements = ValueNotifier<AnnouncementStore?>(null);
 
   /// The app installs a downloaded version at its start (automatic
   /// updates) and quits in a moment, so it does not connect first.
@@ -138,6 +171,7 @@ abstract final class Updates {
     if (githubRepo.isEmpty || _timer != null) return;
     _core = core;
     _settings = settings;
+    announcements.value = AnnouncementStore(settings, version: appVersion);
     _startArgs = [
       for (final a in args)
         if (a == '--autostart' ||
@@ -147,7 +181,9 @@ abstract final class Updates {
     ];
     // A version found earlier, unless this app is already that one.
     if (newerVersion(settings.updateVersion, appVersion)) {
-      available.value = Release(settings.updateVersion, settings.updateUrl);
+      available.value = settings.updateDetails.isEmpty
+          ? Release(settings.updateVersion, settings.updateUrl)
+          : releaseFromJson(settings.updateDetails);
     }
     core.addListener(_onStatus);
     _first = Timer(const Duration(minutes: 1), _due);
@@ -165,6 +201,8 @@ abstract final class Updates {
     _startArgs = const [];
     _downloadsAsked.clear();
     available.value = null;
+    announcements.value?.dispose();
+    announcements.value = null;
     installingAtStart.value = false;
     failure.value = null;
     resultSeen.value = false;
@@ -222,8 +260,17 @@ abstract final class Updates {
     if (update.downloading || update.installing) return;
     if (update.ready && update.version == release.version) return;
     if (!_downloadsAsked.add(release.version)) return;
+    final Map<String, Object?>? source;
+    try {
+      source = release.installSource();
+    } on FormatException catch (e) {
+      failure.value = '$e';
+      return;
+    }
     unawaited(
-      core.downloadUpdate(release.version).catchError((Object _) {
+      core.downloadUpdate(release.version, source: source).catchError((
+        Object _,
+      ) {
         // The core's status says why.
       }),
     );
@@ -244,7 +291,10 @@ abstract final class Updates {
     }
     _wanted = release.version;
     try {
-      await core.downloadUpdate(release.version);
+      await core.downloadUpdate(
+        release.version,
+        source: release.installSource(),
+      );
     } on Exception catch (e) {
       _wanted = null;
       failure.value = '$e';
@@ -283,7 +333,12 @@ abstract final class Updates {
     final last = _settings?.updateCheckedAt;
     if (last != null && DateTime.now().difference(last) < every) return;
     try {
-      found(await checkForUpdate(proxy: updateProxy(_core?.status)));
+      found(
+        await checkForUpdate(
+          proxy: updateProxy(_core?.status),
+          onAnnouncements: receiveAnnouncements,
+        ),
+      );
     } on Exception {
       // No network, or GitHub not reachable: the next hour tries again.
     }
@@ -291,13 +346,36 @@ abstract final class Updates {
 
   /// The result of a look that worked, here or on the About page: a newer
   /// [release], or null when this version is the newest.
-  static void found(Release? release) {
+  static void found(
+    Release? release, {
+    UpdateCheck check = UpdateCheck.automatic,
+    String? os,
+  }) {
+    final android = (os ?? Platform.operatingSystem) == 'android';
+    final previous = available.value;
+    // The next scheduled check can recommend an older release than one
+    // already found manually. Keep the newer download across restarts.
+    if (android &&
+        check == UpdateCheck.automatic &&
+        previous != null &&
+        newerVersion(previous.version, appVersion) &&
+        (release == null || newerVersion(previous.version, release.version))) {
+      release = release?.mandatory == true && !previous.mandatory
+          ? releaseFromJson({...previous.toJson(), 'mandatory': true})
+          : previous;
+    }
     available.value = release;
     _settings?.update(
-      updateCheckedAt: DateTime.now(),
+      updateCheckedAt: android && check == UpdateCheck.manual
+          ? null
+          : DateTime.now(),
       updateVersion: release?.version ?? '',
       updateUrl: release?.url ?? '',
+      updateDetails: release?.toJson() ?? const {},
     );
     _downloadInBackground();
   }
+
+  static void receiveAnnouncements(List<Announcement> items) =>
+      announcements.value?.receive(items);
 }

@@ -3,8 +3,8 @@
 # core, and publishes them as a GitHub release, each file twice: under a
 # fixed name, which the README's releases/latest/download links fetch, and
 # with the version in its name (Arman-VPN-1.2.3-Android-arm64-v8a.apk),
-# which the release's own notes and the app's Download button use, so a
-# downloaded file says which version it is. "Run workflow" builds without
+# which the release notes and older installed apps use during the update
+# manifest transition. "Run workflow" builds without
 # publishing.
 #
 # Secrets for the Android release key (required for a tag):
@@ -92,6 +92,12 @@ jobs:
           # The TUN stack's tests need sing-tun's gVisor stack.
           go vet -tags with_gvisor ./internal/tunstack/
           go test -tags with_gvisor ./internal/tunstack/
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Relay worker
+        run: node --test core/scripts/relay/worker.test.mjs
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -429,7 +435,10 @@ jobs:
           ls
       - name: Checksums
         working-directory: release
-        run: sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+        run: |
+          sha256sum * > SHA256SUMS.txt
+          printf '# Arman VPN version: %s\n' "${GITHUB_REF_NAME#v}" >> SHA256SUMS.txt
+          cat SHA256SUMS.txt
       # The Windows app installs a new version only when the release key
       # signed this list (core/internal/update): SHA256SUMS.txt.sig.
       - name: Sign the checksums

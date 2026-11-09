@@ -168,12 +168,18 @@ class DesktopIntegration {
   void _notifyUpdate() {
     final release = Updates.available.value;
     if (release == null || !_hidden) return;
-    if (release.version == _notifiedUpdate ||
-        release.version == settings.dismissedUpdate) {
+    final notice = '${release.version}:${release.mandatory}';
+    if (notice == _notifiedUpdate ||
+        (!release.mandatory && release.version == settings.dismissedUpdate)) {
       return;
     }
-    _notifiedUpdate = release.version;
-    _bridge.notify(_l.appTitle, _l.updateAvailable(release.version));
+    _notifiedUpdate = notice;
+    _bridge.notify(
+      _l.appTitle,
+      release.mandatory
+          ? _l.updateRequired(release.version)
+          : _l.updateAvailable(release.version),
+    );
   }
 
   void _onChange() {

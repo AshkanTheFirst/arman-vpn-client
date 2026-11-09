@@ -1106,6 +1106,11 @@ class AppLocalizationsAz extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return 'Zəhmət olmasa $version versiyasına yeniləyin. Bu yeniləmə tələb olunur.';
+  }
+
+  @override
   String get download => 'Yüklə';
 
   @override

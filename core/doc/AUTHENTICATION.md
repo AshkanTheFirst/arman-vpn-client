@@ -132,7 +132,7 @@ Terminal failures are reported, not hammered: `reauth_required` (FxA rejected th
 Startup, renewal, quota checks, and manual account switches all obtain passes through `AccountPool.AcquirePass`; tests that build a controller without an account pool exercise the same recovery through `acquireUsablePass` with one fixed auth.
 
 - HTTP 401 triggers an OAuth refresh; HTTP 403 (also after a refresh) triggers Guardian activation (`recoverGuardianRejection`).
-- Transient network/server failures and HTTP 451 return without trying other accounts, because every account would fail the same way.
+- Transient network/server failures and HTTP 451 return without trying other accounts, because every account would fail the same way. Before surfacing a production Guardian 451, the service may try the manifest's healthy automatic relays (see [API relays](OPERATOR.md#guardian-returns-http-451-region_unavailable)); the original response is retained if none works. Other control-plane APIs and the default Firefox TLS/HTTP2 login recovery route are unchanged.
 - Quota at the switch threshold, HTTP 429, a spent quota, an FxA sign-in requirement, or a persistent Guardian rejection move to the next usable account; see [MULTI-ACCOUNT.md](MULTI-ACCOUNT.md).
 - The quota monitor reads usage with `HEAD` and only fetches a pass when the active account must hand over. When a user clicks **Refresh quota** and Guardian refuses `HEAD` with HTTP 403, the service tries the normal pass `GET` once and reads only the quota headers. The current tunnel keeps its pass.
 - A CONNECT HTTP 429 is a transport-level error observation; it does not alone trigger immediate session reconstruction.

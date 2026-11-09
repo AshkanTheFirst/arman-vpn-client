@@ -1109,6 +1109,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return 'Обновите приложение до версии $version. Это обновление необходимо.';
+  }
+
+  @override
   String get download => 'Скачать';
 
   @override

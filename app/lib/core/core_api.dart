@@ -364,8 +364,11 @@ class CoreApi {
 
   /// Starts downloading [version] of the app (the desktop app's core; 409
   /// for a copy that does not update itself).
-  Future<void> downloadUpdate(String version) =>
-      _json('POST', '/api/update/download', {'version': version});
+  Future<void> downloadUpdate(String version, {Map<String, Object?>? source}) =>
+      _json('POST', '/api/update/download', {
+        'version': version,
+        'source': ?source,
+      });
 
   /// Installs the downloaded [version]: the core starts the installation,
   /// which waits for this app ([pid]) and its core to quit, then starts the

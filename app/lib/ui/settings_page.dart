@@ -280,10 +280,11 @@ class _SettingsPageState extends State<SettingsPage> {
     if (mounted) _toast(AppLocalizations.of(context).saved);
   }
 
-  /// Changes the language, then offers the routing most of its speakers
-  /// want (Persian: Iran, Chinese: China, Russian: Russia).
+  /// Android changes only the UI language. Desktop also offers the routing
+  /// most of its speakers want (Persian: Iran, Chinese: China, Russian: Russia).
   Future<void> _pickLanguage(String language) async {
     widget.settings.update(language: language);
+    if (Platform.isAndroid) return;
     final region = AppSettings.regionForLanguage(language);
     if (region == null ||
         (_bool(['routing', 'enabled']) &&

@@ -650,6 +650,12 @@
   "checkingUpdates": "Checking…",
   "upToDate": "You have the latest version.",
   "updateAvailable": "Version {version} is available.",
+  "updateRequired": "Please update to version {version}. This update is required.",
+  "@updateRequired": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
   "@updateAvailable": {
     "placeholders": {
       "version": {

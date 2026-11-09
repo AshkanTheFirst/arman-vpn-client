@@ -319,6 +319,7 @@
   "checkingUpdates": "正在检查…",
   "upToDate": "已是最新版本。",
   "updateAvailable": "新版本 {version} 已发布。",
+  "updateRequired": "请更新至 {version} 版本。此更新为必要更新。",
   "download": "下载",
   "updateCheckFailed": "无法检查更新：{error}",
   "updateCheckNoNetwork": "无法连接到 GitHub。请检查网络连接后重试。",

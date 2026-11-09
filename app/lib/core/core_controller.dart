@@ -283,8 +283,8 @@ class CoreController extends ChangeNotifier {
   Future<void> autoConnect() => _act(() => _require().autoConnect());
 
   /// Starts downloading [version] of the app (the Windows app's core).
-  Future<void> downloadUpdate(String version) =>
-      _act(() => _require().downloadUpdate(version));
+  Future<void> downloadUpdate(String version, {Map<String, Object?>? source}) =>
+      _act(() => _require().downloadUpdate(version, source: source));
 
   /// Installs the downloaded [version]; the app ([pid]) quits once this
   /// returns, and starts again with [args].

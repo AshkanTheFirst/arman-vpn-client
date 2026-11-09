@@ -2056,8 +2056,11 @@ class _UpdateNotice extends StatelessWidget {
     builder: (context, _) {
       final l = AppLocalizations.of(context);
       final update = core.status?.update;
+      final release = Updates.available.value;
       final last = update?.last;
-      if (last != null && !Updates.resultSeen.value) {
+      if (last != null &&
+          !Updates.resultSeen.value &&
+          release?.mandatory != true) {
         return _UpdateBanner(
           palette: palette,
           icon: last.ok ? Icons.check_circle_rounded : Icons.history_rounded,
@@ -2067,16 +2070,21 @@ class _UpdateNotice extends StatelessWidget {
           onClose: () => Updates.resultSeen.value = true,
         );
       }
-      final release = Updates.available.value;
-      if (release == null || release.version == settings.dismissedUpdate) {
+      if (release == null ||
+          (!release.mandatory && release.version == settings.dismissedUpdate)) {
         return const SizedBox.shrink();
       }
-      void dismiss() => settings.update(dismissedUpdate: release.version);
+      final VoidCallback? dismiss = release.mandatory
+          ? null
+          : () => settings.update(dismissedUpdate: release.version);
       if (update == null) {
         return _UpdateBanner(
           palette: palette,
           icon: Icons.system_update_rounded,
-          text: l.updateAvailable(release.version),
+          text: release.mandatory
+              ? l.updateRequired(release.version)
+              : l.updateAvailable(release.version),
+          problem: release.mandatory,
           action: release.url.isEmpty
               ? null
               : (
@@ -2120,7 +2128,10 @@ class _UpdateNotice extends StatelessWidget {
       return _UpdateBanner(
         palette: palette,
         icon: Icons.system_update_rounded,
-        text: mine && update.ready
+        problem: release.mandatory,
+        text: release.mandatory
+            ? l.updateRequired(release.version)
+            : mine && update.ready
             ? l.updateReady(release.version)
             : l.updateAvailable(release.version),
         action: (

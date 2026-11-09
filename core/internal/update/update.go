@@ -1,5 +1,5 @@
 // Package update installs new versions of the desktop app on Windows,
-// Linux, and macOS. The app finds a newer release on GitHub and asks its
+// Linux, and macOS. The app finds a newer release in its manifest and asks its
 // core to download it: the core fetches the release's SHA256SUMS.txt and
 // its signature (SHA256SUMS.txt.sig, Ed25519, checked against the key built
 // into the core, internal/signing), then the release's zip (Windows) or
@@ -419,11 +419,20 @@ func bad(format string, a ...any) error { return &badRelease{fmt.Errorf(format, 
 // Download starts downloading version v in the background, unless it is
 // downloading or downloaded already. v must be newer than this version.
 func (m *Manager) Download(v string) error {
+	return m.DownloadFrom(v, m.defaultSource(v))
+}
+
+// DownloadFrom downloads a manifest-selected archive, preserving all
+// signature, checksum, version, and installation checks.
+func (m *Manager) DownloadFrom(v string, source Source) error {
 	if !isVersion(v) {
 		return fmt.Errorf("%q is not a version", v)
 	}
 	if !version.Newer(v, m.opts.Current) {
 		return fmt.Errorf("version %s is not newer than this one (%s)", v, m.opts.Current)
+	}
+	if err := source.validate(); err != nil {
+		return err
 	}
 	m.mu.Lock()
 	switch m.status.State {
@@ -442,17 +451,17 @@ func (m *Manager) Download(v string) error {
 	}
 	m.status = Status{State: StateDownloading, Version: v, Last: m.status.Last}
 	m.mu.Unlock()
-	go m.download(v)
+	go m.download(v, source)
 	return nil
 }
 
 // download fetches version v the first way that works; a release that does
 // not check out is not tried another way.
-func (m *Manager) download(v string) {
+func (m *Manager) download(v string, source Source) {
 	logx.Info("update: downloading version=%s", v)
 	var err error
 	for _, t := range m.transports() {
-		if err = m.fetch(t, v); err == nil {
+		if err = m.fetch(t, v, source); err == nil {
 			break
 		}
 		logx.Warn("update: downloading version=%s failed err=%s", v, logx.Err(err))
@@ -489,20 +498,19 @@ func (m *Manager) transports() []http.RoundTripper {
 
 // fetch downloads the signed list and the package of version v through t,
 // and keeps them in the version's folder once they check out.
-func (m *Manager) fetch(t http.RoundTripper, v string) error {
-	base := m.baseURL + "v" + v + "/"
+func (m *Manager) fetch(t http.RoundTripper, v string, source Source) error {
 	small := &http.Client{Transport: t, Timeout: listTimeout}
 	defer small.CloseIdleConnections()
-	sums, err := get(small, base+SumsFile, maxSumsSize)
+	sums, err := get(small, source.ChecksumsURL, maxSumsSize)
 	if err != nil {
 		return err
 	}
-	sig, err := get(small, base+SigFile, maxSigSize)
+	sig, err := get(small, source.SignatureURL, maxSigSize)
 	if err != nil {
 		return err
 	}
-	name := AssetName(v)
-	want, err := checkedHash(sums, sig, name)
+	name := source.File
+	want, err := checkedPackageHash(sums, sig, name, v)
 	if err != nil {
 		return err
 	}
@@ -514,13 +522,22 @@ func (m *Manager) fetch(t http.RoundTripper, v string) error {
 	defer os.Remove(part)
 	big := &http.Client{Transport: t, Timeout: packageTimeout}
 	defer big.CloseIdleConnections()
-	if err := m.getPackage(big, base+name, part, want); err != nil {
+	if err := m.getPackage(big, source.URL, part, want); err != nil {
 		return err
 	}
 	for file, data := range map[string][]byte{SumsFile: sums, SigFile: sig} {
 		if err := os.WriteFile(filepath.Join(dir, file), data, 0o644); err != nil {
 			return err
 		}
+	}
+	metadata, err := json.Marshal(struct {
+		File string `json:"file"`
+	}{name})
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(dir, packageFile), metadata, 0o644); err != nil {
+		return err
 	}
 	return os.Rename(part, filepath.Join(dir, name))
 }
@@ -666,8 +683,11 @@ func (m *Manager) checkPackage(v string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	name := AssetName(v)
-	want, err := checkedHash(sums, sig, name)
+	name, err := m.cachedPackageName(v)
+	if err != nil {
+		return "", err
+	}
+	want, err := checkedPackageHash(sums, sig, name, v)
 	if err != nil {
 		return "", err
 	}

@@ -20,6 +20,9 @@ import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.provider.OpenableColumns
+import android.service.quicksettings.TileService
+import android.telephony.SubscriptionManager
+import android.telephony.TelephonyManager
 import androidx.webkit.ProxyConfig
 import androidx.webkit.ProxyController
 import androidx.webkit.WebViewFeature
@@ -34,6 +37,7 @@ import io.flutter.plugin.common.MethodChannel.Result
  * its HTTP API on loopback, as on the desktop.
  */
 class MainActivity : FlutterActivity() {
+    private var androidChannel: MethodChannel? = null
     /** Waits for the user's answer to the VPN permission. */
     private var pendingOn: Result? = null
     // A backup waiting for the place the user picks to save it.
@@ -45,6 +49,15 @@ class MainActivity : FlutterActivity() {
         holdPhoneUpright(resources.configuration)
         super.onCreate(savedInstanceState)
         removeOtherCards()
+    }
+
+    /** A tile long-press returns an already open UI to its home page. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.action == TileService.ACTION_QS_TILE_PREFERENCES) {
+            androidChannel?.invokeMethod("openHome", null)
+        }
     }
 
     /**
@@ -90,7 +103,9 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "app/android").setMethodCallHandler { call, result ->
+        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "app/android")
+        androidChannel = channel
+        channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "dataDir" -> result.success(CoreService.dataDir(this).absolutePath)
                 "startCore" -> {
@@ -234,6 +249,7 @@ class MainActivity : FlutterActivity() {
                 // The phone's main processor type (arm64-v8a, armeabi-v7a, ...).
                 "abi" -> result.success(Build.SUPPORTED_ABIS.firstOrNull() ?: "")
                 "isTv" -> result.success(isTv(resources.configuration))
+                "routingCountries" -> inBackground(result) { routingCountries() }
                 "openUrl" -> {
                     val url = call.argument<String>("url") ?: ""
                     val view = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -259,6 +275,27 @@ class MainActivity : FlutterActivity() {
 
     private val worker = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
+
+    /** Country codes for first-run routing; no phone or location permissions. */
+    private fun routingCountries(): Map<String, String> {
+        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_TELEPHONY)) {
+            return emptyMap()
+        }
+        val service = getSystemService(TelephonyManager::class.java) ?: return emptyMap()
+        // On dual-SIM devices use the subscription selected for mobile data.
+        val phone = runCatching {
+            val subscription = SubscriptionManager.getDefaultDataSubscriptionId()
+            if (subscription >= 0) {
+                service.createForSubscriptionId(subscription)
+            } else {
+                service
+            }
+        }.getOrDefault(service)
+        return mapOf(
+            "network_country" to runCatching { phone.networkCountryIso ?: "" }.getOrDefault(""),
+            "sim_country" to runCatching { phone.simCountryIso ?: "" }.getOrDefault("")
+        )
+    }
 
     /** Runs [work] off the UI thread and answers with its value. */
     private fun inBackground(result: Result, work: () -> Any?) {

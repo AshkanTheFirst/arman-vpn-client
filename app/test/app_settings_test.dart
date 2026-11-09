@@ -9,6 +9,30 @@ void main() {
   late Directory dir;
 
   setUp(() => dir = Directory.systemTemp.createTempSync('app_settings_'));
+
+  test(
+    'announcement history and cache survive rapid successive saves',
+    () async {
+      final settings = AppSettings(file: File('${dir.path}/app-settings.json'));
+      settings.update(
+        announcementCache: [
+          {'id': 'sample', 'enabled': true},
+        ],
+      );
+      settings.update(announcementSeen: {'sample': 1});
+      settings.update(announcementAcknowledged: {'sample': 1});
+      final deadline = DateTime.now().add(const Duration(seconds: 3));
+      AppSettings saved;
+      do {
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+        saved = await AppSettings.load(dir.path);
+      } while (saved.announcementAcknowledged.isEmpty &&
+          DateTime.now().isBefore(deadline));
+      expect(saved.announcementCache.single['id'], 'sample');
+      expect(saved.announcementSeen, {'sample': 1});
+      expect(saved.announcementAcknowledged, {'sample': 1});
+    },
+  );
   tearDown(() => dir.deleteSync(recursive: true));
 
   test('defaults without a file', () async {
@@ -58,6 +82,20 @@ void main() {
     expect(AppSettings.suggestedRegion('fa', 'DE'), 'ir');
   });
 
+  test('country detection covers every supported routing region', () {
+    for (final region in AppSettings.regions.where(
+      (region) => region.isNotEmpty,
+    )) {
+      expect(AppSettings.regionForCountries([region.toUpperCase()]), region);
+      expect(AppSettings.regionForCountries(['', ' $region ']), region);
+    }
+    expect(AppSettings.regionForCountries([null, '', 'IR']), 'ir');
+    expect(AppSettings.regionForCountries(['invalid', 'TR', 'IR']), 'tr');
+    expect(AppSettings.regionForCountries(['US', 'IR', 'IR']), '');
+    expect(AppSettings.regionForCountries(['DE', 'CN']), '');
+    expect(AppSettings.regionForCountries([null, '', '']), '');
+  });
+
   test('ignores unknown values', () async {
     File('${dir.path}/app-settings.json')
         .writeAsStringSync('{"language": "xx", "theme": "neon", "close": 7}');
@@ -76,9 +114,7 @@ void main() {
     expect(
       CoreProcess.executableFrom(const []),
       endsWith(
-        Platform.isWindows
-            ? r'core\arman-vpn-core.exe'
-            : 'core/arman-vpn-core',
+        Platform.isWindows ? r'core\arman-vpn-core.exe' : 'core/arman-vpn-core',
       ),
     );
   });

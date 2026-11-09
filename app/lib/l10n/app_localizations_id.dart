@@ -1105,6 +1105,11 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return 'Perbarui ke versi $version. Pembaruan ini diperlukan.';
+  }
+
+  @override
   String get download => 'Unduh';
 
   @override

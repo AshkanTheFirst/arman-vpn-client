@@ -1,5 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'update_manifest.dart';
+import 'core/announcements.dart';
+
+export 'update_manifest.dart';
 
 /// The app's version, "major.minor.patch": `version` in pubspec.yaml, which
 /// the build passes (scripts/build-*.ps1: --dart-define=APP_VERSION=1.1.0).
@@ -10,27 +16,10 @@ const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
 /// check.
 const githubRepo = 'armanlife/arman-vpn-client';
 
-/// A newer release on GitHub.
-class Release {
-  const Release(this.version, this.url);
-
-  final String version;
-  final String url;
-}
-
-/// Whether "major.minor.patch" [a] is newer than [b].
-bool newerVersion(String a, String b) {
-  List<int> parts(String v) => [
-    for (final p in v.replaceFirst(RegExp('^[vV]'), '').split('.'))
-      int.tryParse(p) ?? 0,
-  ];
-  final x = parts(a), y = parts(b);
-  for (var i = 0; i < 3; i++) {
-    final xi = i < x.length ? x[i] : 0, yi = i < y.length ? y[i] : 0;
-    if (xi != yi) return xi > yi;
-  }
-  return false;
-}
+const updateManifestUrl =
+    'https://raw.githubusercontent.com/arman-org/update-manifests/main/arman-vpn-client/updates.json';
+const updateManifestMirror =
+    'https://cdn.jsdelivr.net/gh/arman-org/update-manifests@main/arman-vpn-client/updates.json';
 
 /// A release server used instead of GitHub, to try updates with a local
 /// test release: it serves [updatesFile] at `<server>/updates.json`, answers
@@ -59,19 +48,14 @@ String? releaseFilePart(String os) => switch (os) {
   _ => null,
 };
 
-/// The file (`.github/updates.json` in the repository) that names, for each
-/// system (`windows`, `linux`, `macos`, `android`, as
-/// [Platform.operatingSystem] says), the version its app offers: a release
-/// gives its version to the systems whose users should update, and the
-/// others keep theirs, so a release that changes nothing for a phone is not
-/// offered there.
+/// The manifest filename, also served by the local update test server.
 const updatesFile = 'updates.json';
 
-/// Reads which release this app should update to: the version that
-/// [updatesFile] (GitHub's raw file of [repo]) names for [os], once that
-/// release is published with [os]'s file ([releaseFilePart]). When the raw
-/// file cannot be read or does not name [os], try its jsDelivr mirror, then
-/// the latest release on GitHub.
+/// Reads the platform's update manifest, its jsDelivr mirror, then the
+/// latest GitHub release if neither supplies usable desktop metadata.
+/// Android uses stable for scheduled checks and latest for manual
+/// checks; unavailable Android metadata is retried without bypassing it.
+/// Legacy version-only files remain supported for transition releases.
 /// null when [current] is the newest, or when there is no release yet; an
 /// error while the named release is not published yet, so the next look
 /// comes soon. [proxy] ("host:port"), when set, carries the requests (the
@@ -82,9 +66,12 @@ Future<Release?> checkForUpdate({
   String? proxy,
   String repo = githubRepo,
   String? server,
+  String? manifestUrl,
   String? updatesMirror,
   String? os,
   String current = appVersion,
+  UpdateCheck check = UpdateCheck.automatic,
+  void Function(List<Announcement>)? onAnnouncements,
 }) async {
   final srv = server ?? updateServer;
   final client = HttpClient()
@@ -93,23 +80,49 @@ Future<Release?> checkForUpdate({
         proxy == null || srv.isNotEmpty ? 'DIRECT' : 'PROXY $proxy; DIRECT';
   try {
     final system = os ?? Platform.operatingSystem;
-    var wanted = await _namedVersion(
+    var metadata = await _updateMetadata(
       client,
-      srv.isEmpty
-          ? 'https://raw.githubusercontent.com/$repo/HEAD/.github/$updatesFile'
-          : '$srv/$updatesFile',
+      manifestUrl ?? (srv.isEmpty ? updateManifestUrl : '$srv/$updatesFile'),
       system,
+      srv,
+      repo,
+      check,
+      current,
     );
     final mirror =
         updatesMirror ??
-        (srv.isEmpty
-            ? 'https://cdn.jsdelivr.net/gh/$repo@main/.github/$updatesFile'
-            : null);
-    if (wanted == null && mirror != null) {
-      wanted = await _namedVersion(client, mirror, system);
+        (srv.isEmpty && manifestUrl == null ? updateManifestMirror : null);
+    if (metadata == null && mirror != null) {
+      metadata = await _updateMetadata(
+        client,
+        mirror,
+        system,
+        srv,
+        repo,
+        check,
+        current,
+      );
     }
-    if (wanted == null) return await _latestRelease(client, srv, repo, current);
-    if (!newerVersion(wanted, current)) return null;
+    if (metadata == null) {
+      if (system == 'android') {
+        throw const HttpException('Android update metadata is unavailable');
+      }
+      return await _latestRelease(client, srv, repo, current, system);
+    }
+    onAnnouncements?.call(metadata.announcements);
+    final release = metadata.release;
+    if (!newerVersion(release.version, current)) return null;
+    if (release.downloads.isNotEmpty) {
+      final asset = release.downloads[archiveKey(system, Platform.version)];
+      if (asset == null) {
+        throw const FormatException('No update package for this system');
+      }
+      if (!await _published(client, asset.url)) {
+        throw HttpException('version ${release.version} is not published yet');
+      }
+      return release;
+    }
+    final wanted = release.version;
     final releases = srv.isEmpty
         ? 'https://github.com/$repo/releases'
         : '$srv/releases';
@@ -118,7 +131,7 @@ Future<Release?> checkForUpdate({
     if (!await _published(client, '$releases/download/v$wanted/$file')) {
       throw HttpException('version $wanted is not published yet');
     }
-    return Release(wanted, '$releases/tag/v$wanted');
+    return release;
   } finally {
     client.close(force: true);
   }
@@ -131,13 +144,49 @@ String? versionFor(Object? updates, String os) {
   return v is String && RegExp(r'^\d+\.\d+\.\d+$').hasMatch(v) ? v : null;
 }
 
-/// The version that the [updatesFile] at [url] names for [os]; null when it
-/// cannot be read, is not JSON, or does not name one, allowing the caller
-/// to try the next metadata source.
-Future<String?> _namedVersion(HttpClient client, String url, String os) async {
+/// The platform's rich manifest record or a legacy version-only offer;
+/// null permits the caller to try the next metadata source.
+Future<({Release release, List<Announcement> announcements})?> _updateMetadata(
+  HttpClient client,
+  String url,
+  String os,
+  String server,
+  String repo,
+  UpdateCheck check,
+  String current,
+) async {
   try {
     final (status, body) = await _get(client, url);
-    return status == 200 ? versionFor(jsonDecode(body), os) : null;
+    if (status != 200) return null;
+    final json = jsonDecode(body);
+    if (json is Map<String, Object?> && json.containsKey('platforms')) {
+      final platforms = json['platforms'];
+      if (platforms is! Map<String, Object?>) return null;
+      final releases = json['releases'];
+      if (json.containsKey('releases') && releases is! Map<String, Object?>) {
+        return null;
+      }
+      final release = releaseForCheck(
+        platforms[os],
+        os: os,
+        current: current,
+        check: check,
+        releases: releases as Map<String, Object?>?,
+      );
+      return release != null && release.downloads.isNotEmpty
+          ? (
+              release: release,
+              announcements: parseAnnouncements(json['announcements']),
+            )
+          : null;
+    }
+    final version = versionFor(json, os);
+    if (version == null) return null;
+    final base = server.isEmpty ? 'https://github.com/$repo' : server;
+    return (
+      release: Release(version, '$base/releases/tag/v$version'),
+      announcements: <Announcement>[],
+    );
   } catch (_) {
     return null;
   }
@@ -149,6 +198,7 @@ Future<Release?> _latestRelease(
   String server,
   String repo,
   String current,
+  String system,
 ) async {
   final (status, body) = await _get(
     client,
@@ -161,10 +211,64 @@ Future<Release?> _latestRelease(
   if (status == 404) return null;
   if (status != 200) throw HttpException('HTTP $status');
   final j = jsonDecode(body);
-  final tag = j is Map<String, Object?> ? j['tag_name'] as String? ?? '' : '';
-  final url = j is Map<String, Object?> ? j['html_url'] as String? ?? '' : '';
+  final tag = j is Map<String, Object?> && j['tag_name'] is String
+      ? j['tag_name']! as String
+      : '';
+  final url = j is Map<String, Object?> && j['html_url'] is String
+      ? j['html_url']! as String
+      : '';
   final version = tag.replaceFirst(RegExp('^[vV]'), '');
-  return newerVersion(version, current) ? Release(version, url) : null;
+  if (!validUpdateVersion(version) ||
+      !validUpdateUrl(url) ||
+      !newerVersion(version, current)) {
+    return null;
+  }
+  if (j is Map<String, Object?> && j['assets'] is List) {
+    final assets = <String, String>{
+      for (final a in j['assets']! as List)
+        if (a is Map<String, Object?> &&
+            a['name'] is String &&
+            validUpdateUrl(a['browser_download_url']))
+          a['name']! as String: a['browser_download_url']! as String,
+    };
+    final parts = switch (system) {
+      'windows' => {
+        'archive-x64': 'Windows-x64.zip',
+        'installer-x64': 'Windows-Setup-x64.exe',
+      },
+      'android' => {
+        for (final arch in ['universal', 'arm64-v8a', 'armeabi-v7a', 'x86_64'])
+          arch: 'Android-$arch.apk',
+      },
+      'linux' => {'amd64': 'Linux-amd64.tar.gz', 'arm64': 'Linux-arm64.tar.gz'},
+      'macos' => {'archive': 'macOS.tar.gz', 'installer': 'macOS.dmg'},
+      _ => <String, String>{},
+    };
+    final downloads = <String, Object?>{};
+    for (final entry in parts.entries) {
+      final fixed = 'Arman-VPN-${entry.value}';
+      final versioned = 'Arman-VPN-$version-${entry.value}';
+      final file = assets.containsKey(fixed) ? fixed : versioned;
+      if (assets.containsKey(file)) {
+        downloads[entry.key] = {'file': file, 'url': assets[file]};
+      }
+    }
+    final release = releaseFromJson({
+      'version': version,
+      'release_url': url,
+      'checksums_url': assets['SHA256SUMS.txt'],
+      'signature_url': assets['SHA256SUMS.txt.sig'],
+      'downloads': downloads,
+    });
+    if (release == null ||
+        !release.downloads.containsKey(archiveKey(system, Platform.version))) {
+      throw const FormatException(
+        'The release has no signed update package for this system',
+      );
+    }
+    return release;
+  }
+  return Release(version, url);
 }
 
 /// Whether the release file at [url] is there: GitHub answers a published
@@ -179,7 +283,11 @@ Future<bool> _published(HttpClient client, String url) async {
   final res = await req.close().timeout(const Duration(seconds: 20));
   await res.drain<void>();
   if (res.statusCode == 404) return false;
-  if (res.statusCode >= 400) throw HttpException('HTTP ${res.statusCode}');
+  if (res.statusCode != 200 &&
+      res.statusCode != 206 &&
+      ![301, 302, 303, 307, 308].contains(res.statusCode)) {
+    throw HttpException('HTTP ${res.statusCode}');
+  }
   return true;
 }
 
@@ -196,9 +304,12 @@ Future<(int, String)> _get(
     ..set(HttpHeaders.acceptHeader, accept)
     ..set(HttpHeaders.userAgentHeader, 'arman-vpn/$appVersion');
   final res = await req.close().timeout(const Duration(seconds: 20));
-  final body = await res
-      .transform(utf8.decoder)
-      .join()
-      .timeout(const Duration(seconds: 20));
-  return (res.statusCode, body);
+  final bytes = BytesBuilder(copy: false);
+  await for (final chunk in res.timeout(const Duration(seconds: 20))) {
+    if (bytes.length + chunk.length > 512 * 1024) {
+      throw const FormatException('Update metadata is too large');
+    }
+    bytes.add(chunk);
+  }
+  return (res.statusCode, utf8.decode(bytes.takeBytes()));
 }

@@ -319,6 +319,7 @@
   "checkingUpdates": "Проверка…",
   "upToDate": "У вас последняя версия.",
   "updateAvailable": "Доступна версия {version}.",
+  "updateRequired": "Обновите приложение до версии {version}. Это обновление необходимо.",
   "download": "Скачать",
   "updateCheckFailed": "Не удалось проверить обновления: {error}",
   "updateCheckNoNetwork": "Не удалось связаться с GitHub. Проверьте подключение к интернету и попробуйте ещё раз.",

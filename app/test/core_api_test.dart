@@ -21,7 +21,7 @@ void main() {
             ..headers.contentType = ContentType('application', 'zip')
             ..headers.set(
               'Content-Disposition',
-              'attachment; filename="Arman-VPN-backup-2026-11-06.zip"',
+              'attachment; filename="Arman-VPN-backup-2026-11-06_19-26-03.zip"',
             )
             ..add([0x50, 0x4b, 0x03, 0x04]);
           await req.response.close();
@@ -47,6 +47,7 @@ void main() {
             },
           ),
           ('POST', '/api/system-proxy') => (200, {'mode': 'clear'}),
+          ('POST', '/api/update/download') => (200, {'state': 'downloading'}),
           ('DELETE', '/api/accounts/a') => (200, {}),
           ('DELETE', '/api/signin/s') => (200, {}),
           ('POST', '/api/signin/browser/proxy') => (
@@ -104,7 +105,7 @@ void main() {
     test('saves and takes in a backup', () async {
       final file = await api.exportBackup();
       expect(seen['token'], 'secret-token');
-      expect(file.name, 'Arman-VPN-backup-2026-11-06.zip');
+      expect(file.name, 'Arman-VPN-backup-2026-11-06_19-26-03.zip');
       expect(file.bytes, [0x50, 0x4b, 0x03, 0x04]);
 
       final contents = await api.inspectBackup(file.bytes);
@@ -135,6 +136,24 @@ void main() {
       expect(seen['type'], 'application/json');
       expect(jsonDecode(seen['body'] as String), {'mode': 'clear'});
     });
+
+    test(
+      'passes manifest download metadata through the authenticated API',
+      () async {
+        final source = <String, Object?>{
+          'file': 'Arman-VPN-Windows-x64.zip',
+          'url': 'https://cdn.example/package',
+          'checksums_url': 'https://cdn.example/sums',
+          'signature_url': 'https://cdn.example/signature',
+        };
+        await api.downloadUpdate('1.2.3', source: source);
+        expect(seen['token'], 'secret-token');
+        expect(jsonDecode(seen['body'] as String), {
+          'version': '1.2.3',
+          'source': source,
+        });
+      },
+    );
 
     test('turns error answers into CoreApiException', () async {
       await expectLater(

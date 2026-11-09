@@ -12,7 +12,9 @@
 // hosts below are relayed, so the relay is not an open proxy for others.
 //
 // Deploy: Cloudflare dashboard > Workers & Pages > Create > Worker, paste
-// this file, set SECRET, Deploy.
+// this file, set SECRET in the script or as a Worker secret binding, Deploy.
+// The client's authenticated ?health=1 check verifies only that this worker
+// is responding. It does not make any request to Guardian or another host.
 
 // A secret only your client knows, which the relay URL ends in:
 // ?secret=SECRET. Required: without one the relay relays nothing (the
@@ -25,7 +27,7 @@ const ALLOWED = [
 ];
 
 // Headers that describe this hop, not the request.
-const DROP = ["host", "connection", "content-length", "x-forwarded-for", "x-forwarded-proto", "x-forwarded-host", "x-real-ip"];
+const DROP = ["host", "connection", "content-length", "keep-alive", "proxy-authenticate", "proxy-authorization", "te", "trailer", "transfer-encoding", "upgrade", "forwarded", "x-forwarded-for", "x-forwarded-proto", "x-forwarded-host", "x-real-ip", "true-client-ip"];
 
 function fail(status, why) {
   return new Response(why, { status, headers: { "X-Relay-Error": why, "Content-Type": "text/plain" } });
@@ -84,12 +86,29 @@ background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
   return new Response(html, { status: s.status, headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 
+// A local response proves that the worker currently accepts requests;
+// Cloudflare quota/availability errors cannot produce this success body.
+function health() {
+  return new Response(JSON.stringify({
+    relay: "arman-vpn", version: 1, ready: true,
+  }), {
+    status: 200,
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+  });
+}
+
 export default {
-  async fetch(request) {
+  async fetch(request, env = {}) {
     const here = new URL(request.url);
-    const browser = !here.searchParams.has("url");
-    if (!SECRET) return browser ? page("unset") : fail(503, "no secret is set in the relay");
-    if (here.searchParams.get("secret") !== SECRET) return browser ? page("wrong") : fail(403, "wrong secret");
+    const probe = here.searchParams.get("health") === "1";
+    const browser = !here.searchParams.has("url") && !probe;
+    const secret = env.SECRET || SECRET;
+    if (!secret) return browser ? page("unset") : fail(503, "no secret is set in the relay");
+    if (here.searchParams.get("secret") !== secret) return browser ? page("wrong") : fail(403, "wrong secret");
+    if (probe) {
+      if (request.method !== "GET") return fail(405, "health requires GET");
+      return health();
+    }
     if (browser) return page("works");
     let target;
     try {
@@ -98,6 +117,9 @@ export default {
       return fail(400, "url must be an https URL");
     }
     if (target.protocol !== "https:") return fail(400, "url must be an https URL");
+    if (target.username || target.password || target.hash || (target.port && target.port !== "443")) {
+      return fail(400, "target must not contain credentials, a fragment or a non-HTTPS port");
+    }
     const host = target.hostname.toLowerCase();
     if (!ALLOWED.some((domain) => host === domain || host.endsWith("." + domain))) {
       return fail(403, `host not allowed: ${host}`);
@@ -112,6 +134,15 @@ export default {
     const hasBody = request.method !== "GET" && request.method !== "HEAD";
     const body = hasBody ? await request.arrayBuffer() : undefined;
     // Redirects go back to the client, which follows them through the relay.
-    return fetch(target, { method: request.method, headers, body, redirect: "manual" });
+    try {
+      const upstream = await fetch(target, { method: request.method, headers, body, redirect: "manual" });
+      const responseHeaders = new Headers(upstream.headers);
+      // Distinguish a forwarded Guardian response from a Cloudflare error
+      // generated before the worker runs (for example an exhausted quota).
+      responseHeaders.set("X-Arman-Relay", "1");
+      return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers: responseHeaders });
+    } catch {
+      return fail(502, "upstream request failed");
+    }
   },
 };

@@ -16,6 +16,19 @@ import (
 )
 
 // All credentials in this file are local fixtures.
+func TestBackupNamesIncludeLocalTimeAndDifferWithinADay(t *testing.T) {
+	now := time.Date(2026, 11, 9, 20, 45, 8, 0, time.FixedZone("local", 3*3600+30*60))
+	first := backupFileName(now)
+	if first != "Arman-VPN-backup-2026-11-09_20-45-08.zip" {
+		t.Fatalf("unexpected backup name: %s", first)
+	}
+	if first == backupFileName(now.Add(time.Second)) {
+		t.Fatal("backups made at different seconds have the same name")
+	}
+	if strings.ContainsAny(first, ":/\\") {
+		t.Fatal("the backup name contains characters incompatible with Windows")
+	}
+}
 
 func zipNames(t *testing.T, data []byte) []string {
 	t.Helper()

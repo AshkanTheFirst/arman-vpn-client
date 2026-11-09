@@ -1104,6 +1104,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return 'Vui lòng cập nhật lên phiên bản $version. Bản cập nhật này là bắt buộc.';
+  }
+
+  @override
   String get download => 'Tải xuống';
 
   @override

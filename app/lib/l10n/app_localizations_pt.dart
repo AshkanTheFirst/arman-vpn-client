@@ -1108,6 +1108,11 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return 'Atualize para a versão $version. Esta atualização é necessária.';
+  }
+
+  @override
   String get download => 'Baixar';
 
   @override

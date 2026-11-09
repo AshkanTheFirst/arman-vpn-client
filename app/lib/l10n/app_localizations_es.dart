@@ -1113,6 +1113,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String updateRequired(String version) {
+    return 'Actualiza a la versión $version. Esta actualización es necesaria.';
+  }
+
+  @override
   String get download => 'Descargar';
 
   @override

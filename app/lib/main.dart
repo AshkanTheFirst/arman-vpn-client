@@ -68,6 +68,7 @@ Future<void> main(List<String> args) async {
 /// that keeps the proxy up while the UI is closed.
 Future<void> runAndroid() async {
   WidgetsFlutterBinding.ensureInitialized();
+  AndroidCore.listenForHomeRequests();
   // Edge to edge: the home page's hero colors the status bar.
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
@@ -79,6 +80,11 @@ Future<void> runAndroid() async {
   final dataDir = await AndroidCore.dataDir();
   final settings = await AppSettings.load(dataDir);
   await AndroidCore.loadMode();
+  await AndroidCore.prepareFirstRunRouting(
+    settings,
+    systemCountry:
+        WidgetsBinding.instance.platformDispatcher.locale.countryCode,
+  );
   final core = CoreController(
     AndroidCore(dataDir).connect,
     turnOn: AndroidCore.setOn,

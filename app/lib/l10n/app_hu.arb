@@ -319,6 +319,7 @@
   "checkingUpdates": "Keresés…",
   "upToDate": "A legújabb verziót használja.",
   "updateAvailable": "Elérhető a(z) {version} verzió.",
+  "updateRequired": "Frissíts a(z) {version} verzióra. Ez a frissítés szükséges.",
   "download": "Letöltés",
   "updateCheckFailed": "Nem sikerült frissítéseket keresni: {error}",
   "updateCheckNoNetwork": "A GitHub nem érhető el. Ellenőrizze az internetkapcsolatot, és próbálja újra.",

@@ -474,10 +474,13 @@ const languageNames = {
   'bn': 'বাংলা',
 };
 
-/// The bundled font for a language: Vazirmatn for the Arabic script
-/// (Persian, Arabic); null for the system font.
-String? languageFont(String code) =>
-    const {'fa', 'ar'}.contains(code) ? 'Vazirmatn' : null;
+/// Bundled UI fonts for English and the Arabic script; other languages
+/// keep the platform typography and its script-specific fallbacks.
+String? languageFont(String code) => switch (code) {
+  'en' => 'Inter',
+  'fa' || 'ar' => 'Vazirmatn',
+  _ => null,
+};
 
 /// A title or label in its own language's font.
 TextStyle? languageStyle(String code) => switch (languageFont(code)) {
@@ -768,6 +771,11 @@ class LabeledSwitch extends StatelessWidget {
 /// only.
 Future<void> openLink(BuildContext context, String url) async {
   if (await openUrl(url) || !context.mounted) return;
+  await showLink(context, url);
+}
+
+/// Shows a readable address when no system handler can open it.
+Future<void> showLink(BuildContext context, String url) async {
   final l = AppLocalizations.of(context);
   final theme = Theme.of(context);
   await showDialog<void>(
