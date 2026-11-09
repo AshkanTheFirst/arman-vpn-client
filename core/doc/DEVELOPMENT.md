@@ -35,6 +35,8 @@ Do not run `go mod tidy` or upgrade dependencies for an unrelated edit. Dependen
 
 For an automatic Guardian relay test, `ARMAN_VPN_UPDATE_SERVER` also selects the core's `/updates.json` relay manifest. This lets an isolated Windows test use an unpublished candidate list after a real Guardian HTTP 451. Worker health remains local to the worker; only the subsequent authenticated retry contacts Guardian.
 
+Mock control-plane transports remain authoritative even when installed after daemon configuration. Automatic relay recovery checks the active transport on each request, so a fixture's HTTP 451 cannot trigger real metadata discovery or worker traffic. Cover both fixture/configuration orders when changing this boundary.
+
 ### hev-socks5-tunnel
 
 `app/android/hev-socks5-tunnel` is [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) 2.19.3 (commit `c5584fe`) with its submodules (`src/core`, `third-part/hev-task-system`, `third-part/lwip`, `third-part/yaml`), which the Android app's VPN runs. Its license is in `LICENSE` there, and those of the submodules beside them. It is kept in the repository so that the app builds with nothing downloaded, and because its symlinks do not check out on Windows without special rights. Only what the Android build needs is copied, with every symlink replaced by the file it points to.

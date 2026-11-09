@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"io"
 	"net"
 	"net/http"
@@ -16,7 +17,52 @@ import (
 	"time"
 
 	"github.com/armanlife/arman-vpn-client/core/internal/config"
+	"github.com/armanlife/arman-vpn-client/core/internal/controlplane"
+	"github.com/armanlife/arman-vpn-client/core/internal/guardian"
 )
+
+func TestAutomaticRelayKeepsCustomControlPlaneIsolated(t *testing.T) {
+	for _, before := range []bool{true, false} {
+		t.Run(map[bool]string{true: "fixture-before-config", false: "fixture-after-config"}[before], func(t *testing.T) {
+			previous, previousRelay := controlplane.Transport(), apiRelayTransport
+			t.Cleanup(func() {
+				guardian.SetRegionRecovery(nil)
+				controlplane.SetTransport(previous)
+				apiRelayTransport = previousRelay
+			})
+			controlplane.SetTransport(nil)
+			apiRelayTransport = nil
+			var metadataRequests atomic.Int32
+			metadata := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				metadataRequests.Add(1)
+				io.WriteString(w, `{"relays":{"enabled":false,"urls":[]}}`)
+			}))
+			defer metadata.Close()
+			t.Setenv("ARMAN_VPN_UPDATE_SERVER", metadata.URL)
+			fixture := auditRoundTripper(func(r *http.Request) (*http.Response, error) {
+				return coreResponse(r, http.StatusUnavailableForLegalReasons, `{"error":"fixture refusal"}`, nil), nil
+			})
+			if before {
+				controlplane.SetTransport(fixture)
+			}
+			if err := configureAPIRelay(config.Network{APIRelayEnabled: true, APIRelayECH: config.RelayECHOff}); err != nil {
+				t.Fatal(err)
+			}
+			if !before {
+				controlplane.SetTransport(fixture)
+			}
+			ctx, cancel := context.WithTimeout(t.Context(), time.Second)
+			defer cancel()
+			_, err := guardian.FetchProxyPass(ctx, guardian.DefaultEndpoint, "fixture")
+			if !errors.Is(err, guardian.ErrRegionUnavailable) || !strings.Contains(err.Error(), "fixture refusal") {
+				t.Fatalf("fixture response changed: %v", err)
+			}
+			if metadataRequests.Load() != 0 {
+				t.Fatal("a custom control-plane response escaped into automatic relay discovery")
+			}
+		})
+	}
+}
 
 func TestAutomaticRelayReservesTLSFallbackTimeForStalledECH(t *testing.T) {
 	server := httptest.NewTLSServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))

@@ -286,7 +286,7 @@ func TestFailedWakeWaitsBeforeRetrying(t *testing.T) {
 		t.Fatalf("a connection right after a failed wake must not ask again: %v, passes %d -> %d", err, asked, f.passes.Load())
 	}
 	view, _ = d.StatusView()
-	if view.State.Phase != PhaseRunning || view.Proxy.WakeError == "" || view.Proxy.WakeFailedAt.IsZero() || view.Proxy.SleepingSince.IsZero() {
+	if view.State.Phase != PhaseRunning || view.Proxy == nil || view.Proxy.WakeError == "" || view.Proxy.WakeFailedAt.IsZero() || view.Proxy.SleepingSince.IsZero() {
 		t.Fatalf("a failed wake is shown on the sleeping proxy: %+v %+v", view.State, view.Proxy)
 	}
 

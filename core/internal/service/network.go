@@ -83,7 +83,15 @@ func configureAPIRelay(n config.Network) error {
 	guardian.SetRegionRecovery(nil)
 	if n.APIRelayEnabled && strings.TrimSpace(n.APIRelay) == "" &&
 		(controlplane.UsesDefaultTransport() || controlplane.Transport() == apiRelayTransport) {
-		guardian.SetRegionRecovery(newAutomaticRelays(n).recover)
+		pool := newAutomaticRelays(n)
+		guardian.SetRegionRecovery(func(req *http.Request) (*http.Response, error) {
+			// A custom route may be installed after daemon configuration.
+			// Its responses must never escape through an automatic relay.
+			if !controlplane.UsesDefaultTransport() {
+				return nil, nil
+			}
+			return pool.recover(req)
+		})
 	}
 	if raw == "" {
 		// Only a relay this function set is taken away: another transport
