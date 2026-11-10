@@ -1596,6 +1596,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get connRouteFailed => '失败';
+
+  @override
+  String get testRelay => '测试中继状态';
+
+  @override
+  String get relayTestTitle => '中继状态测试';
+
+  @override
+  String get relayTestHint => '仅检查中继，不向 Mozilla 发送请求或账户信息。';
+
+  @override
+  String get relayTestPassed => '中继已就绪';
+
+  @override
+  String get relayTestFailed => '无法确认中继状态';
+
+  @override
+  String get relayTestCopy => '复制报告';
+
+  @override
+  String get relayTestInterrupted => '测试在收到完整结果前结束。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -3190,4 +3211,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get connRouteFailed => '失敗';
+
+  @override
+  String get testRelay => '測試中繼狀態';
+
+  @override
+  String get relayTestTitle => '中繼狀態測試';
+
+  @override
+  String get relayTestHint => '僅檢查中繼，不向 Mozilla 傳送請求或帳戶資訊。';
+
+  @override
+  String get relayTestPassed => '中繼已就緒';
+
+  @override
+  String get relayTestFailed => '無法確認中繼狀態';
+
+  @override
+  String get relayTestCopy => '複製報告';
+
+  @override
+  String get relayTestInterrupted => '測試在收到完整結果前結束。';
 }

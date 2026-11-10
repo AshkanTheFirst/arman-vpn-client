@@ -472,5 +472,12 @@
   "connRouteDirect": "直連",
   "connRouteBlocked": "已封鎖",
   "connRoutePort": "連接埠被拒",
-  "connRouteFailed": "失敗"
+  "connRouteFailed": "失敗",
+  "testRelay": "測試中繼狀態",
+  "relayTestTitle": "中繼狀態測試",
+  "relayTestHint": "僅檢查中繼，不向 Mozilla 傳送請求或帳戶資訊。",
+  "relayTestPassed": "中繼已就緒",
+  "relayTestFailed": "無法確認中繼狀態",
+  "relayTestCopy": "複製報告",
+  "relayTestInterrupted": "測試在收到完整結果前結束。"
 }

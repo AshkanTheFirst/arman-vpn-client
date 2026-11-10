@@ -17,6 +17,7 @@ import 'bypass_apps_page.dart';
 import 'connection_mode.dart';
 import 'format.dart';
 import 'port_dialog.dart';
+import 'relay_test_dialog.dart';
 import 'widgets.dart';
 
 /// The program file the user picks in the system's open dialog (title, the
@@ -755,6 +756,8 @@ class _SettingsPageState extends State<SettingsPage> {
           onSave: (v) => _save({
             ['network', 'api_relay']: v.trim(),
           }),
+          testLabel: l.testRelay,
+          onTest: (v) => showRelayTestDialog(context, _core, v.trim()),
         ),
       ),
     ],
@@ -1847,6 +1850,8 @@ class _TextSetting extends StatefulWidget {
     this.hint,
     this.multiline = false,
     this.validator,
+    this.testLabel,
+    this.onTest,
   });
 
   final String label;
@@ -1855,6 +1860,8 @@ class _TextSetting extends StatefulWidget {
   final String? hint;
   final bool multiline;
   final String? Function(String value)? validator;
+  final String? testLabel;
+  final Future<void> Function(String value)? onTest;
 
   @override
   State<_TextSetting> createState() => _TextSettingState();
@@ -1928,7 +1935,36 @@ class _TextSettingState extends State<_TextSetting> {
       children: [
         field,
         const SizedBox(height: 8),
-        Align(alignment: AlignmentDirectional.centerEnd, child: button),
+        Row(
+          children: [
+            if (widget.onTest != null)
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton.icon(
+                    onPressed: _saving || _controller.text.trim().isEmpty
+                        ? null
+                        : () {
+                            final error = widget.validator?.call(
+                              _controller.text,
+                            );
+                            setState(() => _error = error);
+                            if (error == null) {
+                              FocusScope.of(context).unfocus();
+                              widget.onTest!(_controller.text);
+                            }
+                          },
+                    icon: const Icon(Icons.health_and_safety_outlined),
+                    label: Text(widget.testLabel ?? ''),
+                  ),
+                ),
+              )
+            else
+              const Spacer(),
+            const SizedBox(width: 8),
+            button,
+          ],
+        ),
       ],
     );
   }

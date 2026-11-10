@@ -472,5 +472,12 @@
   "connRouteDirect": "Langsung",
   "connRouteBlocked": "Diblokir",
   "connRoutePort": "Port ditolak",
-  "connRouteFailed": "Gagal"
+  "connRouteFailed": "Gagal",
+  "testRelay": "Uji kesehatan relai",
+  "relayTestTitle": "Uji kesehatan relai",
+  "relayTestHint": "Hanya memeriksa relai. Tidak mengirim permintaan Mozilla atau informasi akun.",
+  "relayTestPassed": "Relai siap",
+  "relayTestFailed": "Kesehatan relai tidak dapat dipastikan",
+  "relayTestCopy": "Salin laporan",
+  "relayTestInterrupted": "Pengujian berakhir sebelum hasil lengkap diterima."
 }

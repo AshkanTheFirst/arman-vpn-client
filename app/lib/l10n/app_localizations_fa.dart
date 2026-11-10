@@ -1650,4 +1650,26 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'ناموفق';
+
+  @override
+  String get testRelay => 'تست سلامت رله';
+
+  @override
+  String get relayTestTitle => 'تست سلامت رله';
+
+  @override
+  String get relayTestHint =>
+      'فقط خود رله بررسی می‌شود؛ درخواستی به موزیلا یا اطلاعات حساب ارسال نمی‌شود.';
+
+  @override
+  String get relayTestPassed => 'رله آماده است';
+
+  @override
+  String get relayTestFailed => 'سلامت رله تأیید نشد';
+
+  @override
+  String get relayTestCopy => 'کپی گزارش';
+
+  @override
+  String get relayTestInterrupted => 'تست پیش از دریافت نتیجهٔ کامل متوقف شد.';
 }

@@ -1664,4 +1664,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'Failed';
+
+  @override
+  String get testRelay => 'Test relay health';
+
+  @override
+  String get relayTestTitle => 'Relay health test';
+
+  @override
+  String get relayTestHint =>
+      'Checks only the relay. No Mozilla request or account information is sent.';
+
+  @override
+  String get relayTestPassed => 'Relay is ready';
+
+  @override
+  String get relayTestFailed => 'Relay health could not be confirmed';
+
+  @override
+  String get relayTestCopy => 'Copy report';
+
+  @override
+  String get relayTestInterrupted =>
+      'The test ended before a complete result was received.';
 }

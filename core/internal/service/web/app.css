@@ -826,3 +826,15 @@ dialog::backdrop { background: rgba(5, 7, 12, .6); backdrop-filter: blur(3px); }
 }
 .more-menu .menu-panel button:hover { background: var(--surface-3); }
 .more-menu .menu-panel svg { width: 16px; height: 16px; fill: currentColor; }
+/* The diagnostic report stays inside the dialog on small screens. */
+#relay-test-dialog { width: min(760px, calc(100vw - 32px)); }
+#relay-test-log {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: auto;
+  height: min(45vh, 420px);
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: 12.5px/1.5 Consolas, Menlo, monospace;
+}

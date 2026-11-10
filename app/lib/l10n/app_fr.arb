@@ -472,5 +472,12 @@
   "connRouteDirect": "Direct",
   "connRouteBlocked": "Bloqué",
   "connRoutePort": "Port refusé",
-  "connRouteFailed": "Échec"
+  "connRouteFailed": "Échec",
+  "testRelay": "Tester le relais",
+  "relayTestTitle": "Test du relais",
+  "relayTestHint": "Vérifie uniquement le relais. Aucune requête à Mozilla ni information de compte n’est envoyée.",
+  "relayTestPassed": "Le relais est prêt",
+  "relayTestFailed": "L’état du relais n’a pas pu être confirmé",
+  "relayTestCopy": "Copier le rapport",
+  "relayTestInterrupted": "Le test s’est terminé avant de recevoir un résultat complet."
 }

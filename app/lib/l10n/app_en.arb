@@ -1025,5 +1025,12 @@
   "@connRoutePort": {
     "description": "Mozilla's proxy connects to ports 80, 443, 8080, and 8443 only."
   },
-  "connRouteFailed": "Failed"
+  "connRouteFailed": "Failed",
+  "testRelay": "Test relay health",
+  "relayTestTitle": "Relay health test",
+  "relayTestHint": "Checks only the relay. No Mozilla request or account information is sent.",
+  "relayTestPassed": "Relay is ready",
+  "relayTestFailed": "Relay health could not be confirmed",
+  "relayTestCopy": "Copy report",
+  "relayTestInterrupted": "The test ended before a complete result was received."
 }

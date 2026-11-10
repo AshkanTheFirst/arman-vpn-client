@@ -1670,4 +1670,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'فشل';
+
+  @override
+  String get testRelay => 'اختبار سلامة المرحّل';
+
+  @override
+  String get relayTestTitle => 'اختبار سلامة المرحّل';
+
+  @override
+  String get relayTestHint =>
+      'يتم فحص المرحّل فقط، دون إرسال طلب إلى Mozilla أو معلومات الحساب.';
+
+  @override
+  String get relayTestPassed => 'المرحّل جاهز';
+
+  @override
+  String get relayTestFailed => 'تعذّر تأكيد سلامة المرحّل';
+
+  @override
+  String get relayTestCopy => 'نسخ التقرير';
+
+  @override
+  String get relayTestInterrupted => 'انتهى الاختبار قبل استلام نتيجة كاملة.';
 }

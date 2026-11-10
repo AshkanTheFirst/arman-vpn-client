@@ -90,12 +90,26 @@ HTML;
     exit;
 }
 
-$browser = !isset($_GET['url']);
+$probe = ($_GET['health'] ?? '') === '1';
+$browser = !isset($_GET['url']) && !$probe;
 if ($SECRET === '') {
     $browser ? page('unset') : fail(503, 'no secret is set in the relay');
 }
 if (!hash_equals($SECRET, (string)($_GET['secret'] ?? ''))) {
     $browser ? page('wrong') : fail(403, 'wrong secret');
+}
+// This response checks only this host and never calls Guardian.
+if ($probe) {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        fail(405, 'health requires GET');
+    }
+    if (!function_exists('curl_init')) {
+        fail(503, 'PHP curl extension is missing');
+    }
+    header('Content-Type: application/json');
+    header('Cache-Control: no-store');
+    echo json_encode(['relay' => 'arman-vpn', 'version' => 1, 'ready' => true]);
+    exit;
 }
 if ($browser) {
     page('works');

@@ -472,5 +472,12 @@
   "connRouteDirect": "Directo",
   "connRouteBlocked": "Bloqueado",
   "connRoutePort": "Puerto rechazado",
-  "connRouteFailed": "Fallido"
+  "connRouteFailed": "Fallido",
+  "testRelay": "Comprobar el relé",
+  "relayTestTitle": "Prueba del relé",
+  "relayTestHint": "Solo comprueba el relé. No envía solicitudes a Mozilla ni datos de la cuenta.",
+  "relayTestPassed": "El relé está listo",
+  "relayTestFailed": "No se pudo confirmar el estado del relé",
+  "relayTestCopy": "Copiar informe",
+  "relayTestInterrupted": "La prueba terminó antes de recibir un resultado completo."
 }

@@ -1657,4 +1657,27 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'ব্যর্থ';
+
+  @override
+  String get testRelay => 'রিলের অবস্থা পরীক্ষা';
+
+  @override
+  String get relayTestTitle => 'রিলের অবস্থা পরীক্ষা';
+
+  @override
+  String get relayTestHint =>
+      'শুধু রিলে পরীক্ষা করা হয়। Mozilla-তে কোনো অনুরোধ বা অ্যাকাউন্টের তথ্য পাঠানো হয় না।';
+
+  @override
+  String get relayTestPassed => 'রিলে প্রস্তুত';
+
+  @override
+  String get relayTestFailed => 'রিলের অবস্থা নিশ্চিত করা যায়নি';
+
+  @override
+  String get relayTestCopy => 'রিপোর্ট কপি করুন';
+
+  @override
+  String get relayTestInterrupted =>
+      'সম্পূর্ণ ফলাফল পাওয়ার আগে পরীক্ষা শেষ হয়েছে।';
 }

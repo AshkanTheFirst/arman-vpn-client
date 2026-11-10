@@ -472,5 +472,12 @@
   "connRouteDirect": "Doğrudan",
   "connRouteBlocked": "Engellendi",
   "connRoutePort": "Port reddedildi",
-  "connRouteFailed": "Başarısız"
+  "connRouteFailed": "Başarısız",
+  "testRelay": "Röle sağlığını test et",
+  "relayTestTitle": "Röle sağlık testi",
+  "relayTestHint": "Yalnızca röle kontrol edilir. Mozilla isteği veya hesap bilgisi gönderilmez.",
+  "relayTestPassed": "Röle hazır",
+  "relayTestFailed": "Rölenin sağlığı doğrulanamadı",
+  "relayTestCopy": "Raporu kopyala",
+  "relayTestInterrupted": "Test, tam sonuç alınmadan sona erdi."
 }

@@ -1663,4 +1663,26 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'Uğursuz';
+
+  @override
+  String get testRelay => 'Relay sağlamlığını yoxla';
+
+  @override
+  String get relayTestTitle => 'Relay sağlamlıq testi';
+
+  @override
+  String get relayTestHint =>
+      'Yalnız relay yoxlanılır. Mozilla-ya sorğu və hesab məlumatı göndərilmir.';
+
+  @override
+  String get relayTestPassed => 'Relay hazırdır';
+
+  @override
+  String get relayTestFailed => 'Relay sağlamlığı təsdiqlənmədi';
+
+  @override
+  String get relayTestCopy => 'Hesabatı köçür';
+
+  @override
+  String get relayTestInterrupted => 'Tam nəticə alınmadan test başa çatdı.';
 }

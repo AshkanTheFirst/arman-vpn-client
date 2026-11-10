@@ -1663,4 +1663,26 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'Başarısız';
+
+  @override
+  String get testRelay => 'Röle sağlığını test et';
+
+  @override
+  String get relayTestTitle => 'Röle sağlık testi';
+
+  @override
+  String get relayTestHint =>
+      'Yalnızca röle kontrol edilir. Mozilla isteği veya hesap bilgisi gönderilmez.';
+
+  @override
+  String get relayTestPassed => 'Röle hazır';
+
+  @override
+  String get relayTestFailed => 'Rölenin sağlığı doğrulanamadı';
+
+  @override
+  String get relayTestCopy => 'Raporu kopyala';
+
+  @override
+  String get relayTestInterrupted => 'Test, tam sonuç alınmadan sona erdi.';
 }

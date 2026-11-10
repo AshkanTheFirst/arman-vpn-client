@@ -42,6 +42,8 @@ type echDialer struct {
 	dial   func(ctx context.Context, network, address string) (net.Conn, error)
 	lookup func(ctx context.Context, host string) ([]byte, time.Duration, error)
 	base   *tls.Config // tests add their certificate authority
+	// observe is scoped to an explicit relay diagnostic, never global.
+	observe func(stage string, started time.Time, err error)
 
 	mu       sync.Mutex
 	key      []byte
@@ -71,7 +73,9 @@ func newECHDialer(host string, n config.Network, dial func(context.Context, stri
 
 // DialTLSContext is the relay transport's TLS dial.
 func (e *echDialer) DialTLSContext(ctx context.Context, network, address string) (net.Conn, error) {
+	started := time.Now()
 	key, err := e.currentKey(ctx)
+	e.trace("ech_key", started, err)
 	if err != nil {
 		return e.withoutECH(ctx, network, address, err)
 	}
@@ -106,7 +110,10 @@ func (e *echDialer) handshake(ctx context.Context, network, address string, key 
 	cfg.MinVersion = tls.VersionTLS13
 	cfg.EncryptedClientHelloConfigList = key
 	conn := tls.Client(raw, cfg)
-	if err := conn.HandshakeContext(ctx); err != nil {
+	started := time.Now()
+	err = conn.HandshakeContext(ctx)
+	e.trace("tls_ech", started, err)
+	if err != nil {
 		_ = raw.Close()
 		return nil, err
 	}
@@ -117,6 +124,7 @@ func (e *echDialer) handshake(ctx context.Context, network, address string, key 
 // mode.
 func (e *echDialer) withoutECH(ctx context.Context, network, address string, why error) (net.Conn, error) {
 	if e.require {
+		e.trace("ech_required", time.Now(), why)
 		e.report("refused", why)
 		return nil, fmt.Errorf("no ECH (network.api_relay_ech is require): %w", why)
 	}
@@ -128,12 +136,21 @@ func (e *echDialer) withoutECH(ctx context.Context, network, address string, why
 	cfg.ServerName = e.host
 	cfg.MinVersion = tls.VersionTLS12
 	conn := tls.Client(raw, cfg)
-	if err := conn.HandshakeContext(ctx); err != nil {
+	started := time.Now()
+	err = conn.HandshakeContext(ctx)
+	e.trace("tls", started, err)
+	if err != nil {
 		_ = raw.Close()
 		return nil, err
 	}
 	e.report("without ECH", why)
 	return conn, nil
+}
+
+func (e *echDialer) trace(stage string, started time.Time, err error) {
+	if e.observe != nil {
+		e.observe(stage, started, err)
+	}
 }
 
 // currentKey returns the fixed key, the one kept from DNS, or a new one.

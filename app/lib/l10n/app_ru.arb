@@ -472,5 +472,12 @@
   "connRouteDirect": "Напрямую",
   "connRouteBlocked": "Заблокировано",
   "connRoutePort": "Порт отклонён",
-  "connRouteFailed": "Ошибка"
+  "connRouteFailed": "Ошибка",
+  "testRelay": "Проверить реле",
+  "relayTestTitle": "Проверка реле",
+  "relayTestHint": "Проверяется только реле. Запросы к Mozilla и данные аккаунта не отправляются.",
+  "relayTestPassed": "Реле готово",
+  "relayTestFailed": "Не удалось подтвердить исправность реле",
+  "relayTestCopy": "Копировать отчёт",
+  "relayTestInterrupted": "Проверка завершилась до получения полного результата."
 }

@@ -2960,6 +2960,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed'**
   String get connRouteFailed;
+
+  /// No description provided for @testRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Test relay health'**
+  String get testRelay;
+
+  /// No description provided for @relayTestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay health test'**
+  String get relayTestTitle;
+
+  /// No description provided for @relayTestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks only the relay. No Mozilla request or account information is sent.'**
+  String get relayTestHint;
+
+  /// No description provided for @relayTestPassed.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay is ready'**
+  String get relayTestPassed;
+
+  /// No description provided for @relayTestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay health could not be confirmed'**
+  String get relayTestFailed;
+
+  /// No description provided for @relayTestCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy report'**
+  String get relayTestCopy;
+
+  /// No description provided for @relayTestInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'The test ended before a complete result was received.'**
+  String get relayTestInterrupted;
 }
 
 class _AppLocalizationsDelegate

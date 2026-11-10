@@ -472,5 +472,12 @@
   "connRouteDirect": "مباشر",
   "connRouteBlocked": "محظور",
   "connRoutePort": "منفذ مرفوض",
-  "connRouteFailed": "فشل"
+  "connRouteFailed": "فشل",
+  "testRelay": "اختبار سلامة المرحّل",
+  "relayTestTitle": "اختبار سلامة المرحّل",
+  "relayTestHint": "يتم فحص المرحّل فقط، دون إرسال طلب إلى Mozilla أو معلومات الحساب.",
+  "relayTestPassed": "المرحّل جاهز",
+  "relayTestFailed": "تعذّر تأكيد سلامة المرحّل",
+  "relayTestCopy": "نسخ التقرير",
+  "relayTestInterrupted": "انتهى الاختبار قبل استلام نتيجة كاملة."
 }

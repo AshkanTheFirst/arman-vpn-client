@@ -84,7 +84,7 @@ func (a *automaticRelays) workerTransport(relay *url.URL) (http.RoundTripper, er
 		}
 		base.DialTLSContext = boundedRelayTLS(d, relayProbeTimeout/2)
 	}
-	return base, nil
+	return newRelayTLSFallback(base, a.network, relay.Hostname(), dialer.DialContext, nil), nil
 }
 
 // Keep time for the normal TLS fallback when an optional ECH key lookup or
@@ -186,7 +186,7 @@ func (a *automaticRelays) healthy(ctx context.Context, relay *url.URL, base http
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Cache-Control", "no-cache")
 	client := &http.Client{
-		Transport: base, Timeout: relayProbeTimeout,
+		Transport: base, Timeout: 2 * relayProbeTimeout,
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 	}
 	resp, err := client.Do(req)

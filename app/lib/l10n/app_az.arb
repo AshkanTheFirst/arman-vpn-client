@@ -472,5 +472,12 @@
   "connRouteDirect": "Birbaşa",
   "connRouteBlocked": "Bloklanıb",
   "connRoutePort": "Port rədd edildi",
-  "connRouteFailed": "Uğursuz"
+  "connRouteFailed": "Uğursuz",
+  "testRelay": "Relay sağlamlığını yoxla",
+  "relayTestTitle": "Relay sağlamlıq testi",
+  "relayTestHint": "Yalnız relay yoxlanılır. Mozilla-ya sorğu və hesab məlumatı göndərilmir.",
+  "relayTestPassed": "Relay hazırdır",
+  "relayTestFailed": "Relay sağlamlığı təsdiqlənmədi",
+  "relayTestCopy": "Hesabatı köçür",
+  "relayTestInterrupted": "Tam nəticə alınmadan test başa çatdı."
 }

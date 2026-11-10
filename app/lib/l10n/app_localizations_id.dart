@@ -1661,4 +1661,27 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'Gagal';
+
+  @override
+  String get testRelay => 'Uji kesehatan relai';
+
+  @override
+  String get relayTestTitle => 'Uji kesehatan relai';
+
+  @override
+  String get relayTestHint =>
+      'Hanya memeriksa relai. Tidak mengirim permintaan Mozilla atau informasi akun.';
+
+  @override
+  String get relayTestPassed => 'Relai siap';
+
+  @override
+  String get relayTestFailed => 'Kesehatan relai tidak dapat dipastikan';
+
+  @override
+  String get relayTestCopy => 'Salin laporan';
+
+  @override
+  String get relayTestInterrupted =>
+      'Pengujian berakhir sebelum hasil lengkap diterima.';
 }

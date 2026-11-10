@@ -1676,4 +1676,27 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'Sikertelen';
+
+  @override
+  String get testRelay => 'Átjátszó ellenőrzése';
+
+  @override
+  String get relayTestTitle => 'Átjátszó állapotvizsgálata';
+
+  @override
+  String get relayTestHint =>
+      'Csak az átjátszót ellenőrzi. Nem küld Mozilla-kérést vagy fiókadatokat.';
+
+  @override
+  String get relayTestPassed => 'Az átjátszó kész';
+
+  @override
+  String get relayTestFailed => 'Az átjátszó állapota nem igazolható';
+
+  @override
+  String get relayTestCopy => 'Jelentés másolása';
+
+  @override
+  String get relayTestInterrupted =>
+      'A teszt a teljes eredmény beérkezése előtt véget ért.';
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:arman_vpn/app_settings.dart';
 import 'package:arman_vpn/core/core_api.dart';
 import 'package:arman_vpn/core/core_controller.dart';
 import 'package:arman_vpn/core/models.dart';
+import 'package:arman_vpn/core/relay_test.dart';
 import 'package:arman_vpn/core/tun_service.dart';
 import 'package:arman_vpn/core/updates.dart';
 import 'package:arman_vpn/core/announcements.dart';
@@ -328,6 +330,15 @@ class FakeApi implements CoreApi {
   @override
   Future<void> saveSettings(Map<String, Object?> config) async =>
       this.config = config;
+
+  String? relayTestAddress;
+  Stream<RelayTestEvent> relayEvents = const Stream.empty();
+
+  @override
+  Stream<RelayTestEvent> testRelay(String url) {
+    relayTestAddress = url;
+    return relayEvents;
+  }
 
   /// The programs running on the computer (GET /api/tun/programs).
   List<Map<String, Object?>> running = [];
@@ -1605,6 +1616,165 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     core.dispose();
   });
+
+  for (final size in [const Size(430, 1000), const Size(1200, 1400)]) {
+    testWidgets(
+      'relay diagnostics use the unsaved address and show live logs at $size',
+      (tester) async {
+        stillMotion(tester);
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final events = StreamController<RelayTestEvent>();
+        addTearDown(events.close);
+        final api = FakeApi()..relayEvents = events.stream;
+        api.config['network'] = {
+          'api_relay': '',
+          'api_relay_enabled': false,
+          'shared_relay_enabled': true,
+        };
+        final before = jsonEncode(api.config);
+        final core = CoreController(
+          () async => api,
+          pollInterval: const Duration(hours: 1),
+        );
+        await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+        core.start();
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Settings'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Relay server'));
+        await tester.pumpAndSettle();
+        final button = find.widgetWithText(OutlinedButton, 'Test relay health');
+        expect(tester.widget<OutlinedButton>(button).onPressed, isNull);
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Relay server'),
+          'https://relay.example/?secret=fixture-secret',
+        );
+        await tester.pump();
+        await tester.ensureVisible(button);
+        await tester.tap(button);
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.text('Relay health test'), findsOneWidget);
+        expect(
+          api.relayTestAddress,
+          'https://relay.example/?secret=fixture-secret',
+        );
+        final step = {
+          'stage': 'tls_ech',
+          'status': 'warning',
+          'code': 'eof',
+          'detail': 'TLS connection closed (EOF).',
+          'elapsed_ms': 100,
+        };
+        events.add(RelayTestEvent.fromJson({'step': step}));
+        await tester.pump();
+        expect(
+          find.textContaining('TLS connection closed (EOF).'),
+          findsOneWidget,
+        );
+        final failure = {
+          'stage': 'health',
+          'status': 'error',
+          'code': 'http_429',
+          'detail': 'HTTP 429: the hosting service is rate limiting requests.',
+          'elapsed_ms': 120,
+        };
+        events.add(
+          RelayTestEvent.fromJson({
+            'result': {
+              'ok': false,
+              'host': 'relay.example',
+              'total_ms': 120,
+              'steps': [step, failure],
+            },
+          }),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text('Relay health could not be confirmed'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('HTTP 429:'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.textContaining('fixture-secret'),
+          ),
+          findsNothing,
+        );
+        String? copiedReport;
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          (call) async {
+            if (call.method == 'Clipboard.setData') {
+              copiedReport = (call.arguments as Map)['text'] as String;
+            }
+            return null;
+          },
+        );
+        addTearDown(
+          () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+            SystemChannels.platform,
+            null,
+          ),
+        );
+        await tester.tap(find.text('Copy report'));
+        await tester.pump();
+        expect(copiedReport, contains('HTTP 429:'));
+        expect(copiedReport, isNot(contains('fixture-secret')));
+        expect(jsonEncode(api.config), before);
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.widgetWithText(FilledButton, 'Close'));
+        await tester.pumpAndSettle();
+        await tester.pumpWidget(const SizedBox());
+        core.dispose();
+      },
+    );
+  }
+
+  testWidgets(
+    'closing relay diagnostics cancels the test and keeps the core available',
+    (tester) async {
+      stillMotion(tester);
+      var cancelled = false;
+      final events = StreamController<RelayTestEvent>(
+        onCancel: () => cancelled = true,
+      );
+      addTearDown(events.close);
+      final api = FakeApi()..relayEvents = events.stream;
+      api.config['network'] = {
+        'api_relay': 'https://relay.example/',
+        'api_relay_enabled': false,
+        'shared_relay_enabled': true,
+      };
+      final core = CoreController(
+        () async => api,
+        pollInterval: const Duration(hours: 1),
+      );
+      await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+      core.start();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Settings'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Relay server'));
+      await tester.pumpAndSettle();
+      final button = find.text('Test relay health');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Testing…'), findsOneWidget);
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Close'));
+      await tester.pumpAndSettle();
+      expect(cancelled, isTrue);
+      await core.refresh();
+      expect(core.status, isNotNull);
+      expect(api.on, isTrue);
+      await tester.pumpWidget(const SizedBox());
+      core.dispose();
+    },
+  );
 
   testWidgets('the MTU field shows the device default until one is set', (
     tester,

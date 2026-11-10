@@ -472,5 +472,12 @@
   "connRouteDirect": "Trực tiếp",
   "connRouteBlocked": "Bị chặn",
   "connRoutePort": "Cổng bị từ chối",
-  "connRouteFailed": "Thất bại"
+  "connRouteFailed": "Thất bại",
+  "testRelay": "Kiểm tra relay",
+  "relayTestTitle": "Kiểm tra tình trạng relay",
+  "relayTestHint": "Chỉ kiểm tra relay. Không gửi yêu cầu tới Mozilla hoặc thông tin tài khoản.",
+  "relayTestPassed": "Relay đã sẵn sàng",
+  "relayTestFailed": "Không thể xác nhận tình trạng relay",
+  "relayTestCopy": "Sao chép báo cáo",
+  "relayTestInterrupted": "Kiểm tra kết thúc trước khi nhận được kết quả đầy đủ."
 }

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'models.dart';
+import 'relay_test.dart';
 
 /// Where the core's API listens and the local token that authorizes the
 /// app (`X-Local-Token`, read from `local-api.token` in the data folder).
@@ -459,6 +460,67 @@ class CoreApi {
       for (final r in (j['results'] as List<Object?>? ?? const []))
         if (r is Map<String, Object?>) DnsTestHost.fromJson(r),
     ];
+  }
+
+  /// Uses a separate connection so closing the diagnostic dialog cancels
+  /// this request without interrupting status polling or the VPN.
+  Stream<RelayTestEvent> testRelay(String url) {
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 3)
+      ..findProxy = (_) => 'DIRECT';
+    late final StreamController<RelayTestEvent> events;
+    var cancelled = false;
+    events = StreamController<RelayTestEvent>(
+      onListen: () async {
+        try {
+          final req = await client
+              .postUrl(endpoint.baseUri.replace(path: '/api/relay/test'))
+              .timeout(_normal);
+          req.headers.set('X-Local-Token', endpoint.token);
+          req.headers.contentType = ContentType.json;
+          req.write(jsonEncode({'url': url, 'stream': true}));
+          final res = await req.close().timeout(_slow);
+          if (res.statusCode != 200) {
+            // Never expose an echoed input address from an older API.
+            throw CoreApiException(
+              res.statusCode,
+              'Relay diagnostics API returned HTTP ${res.statusCode}.',
+            );
+          }
+          await for (final line
+              in res
+                  .transform(utf8.decoder)
+                  .transform(const LineSplitter())
+                  .timeout(const Duration(seconds: 40))) {
+            if (cancelled) break;
+            if (line.isEmpty) continue;
+            final event = jsonDecode(line);
+            if (event is Map<String, Object?>) {
+              events.add(RelayTestEvent.fromJson(event));
+            }
+          }
+        } catch (error) {
+          if (!cancelled) {
+            events.addError(
+              error is CoreApiException
+                  ? error
+                  : const CoreApiException(
+                      0,
+                      'The relay diagnostic connection ended unexpectedly.',
+                    ),
+            );
+          }
+        } finally {
+          client.close(force: true);
+          if (!cancelled) unawaited(events.close());
+        }
+      },
+      onCancel: () {
+        cancelled = true;
+        client.close(force: true);
+      },
+    );
+    return events.stream;
   }
 
   /// The backup file: the data folder (accounts and settings) as a zip,

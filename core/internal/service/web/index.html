@@ -621,6 +621,11 @@
                     <span class="set-text"><label for="f-relay">Relay server</label><small>Your own Cloudflare Worker, or relay.php on your own host.<br>Used only when Mozilla doesn't answer directly: the sign-in, accounts, and server list go through it, not the VPN traffic.</small></span>
                     <span class="set-ctl"><input id="f-relay" name="network.api_relay" spellcheck="false" placeholder="https://relay.NAME.workers.dev/?secret=…"></span>
                   </div>
+                  <div class="set-row">
+                    <span class="set-ic"><svg><use href="#i-gauge"/></svg></span>
+                    <span class="set-text"><span>Relay health</span><small>Test the entered address without saving it or enabling the relay.</small></span>
+                    <span class="set-ctl"><button type="button" class="btn" id="relay-test">Test relay health</button></span>
+                  </div>
                 </div>
               </fieldset>
 
@@ -789,6 +794,19 @@
     </form>
   </dialog>
 
+  <dialog id="relay-test-dialog" aria-labelledby="relay-test-title">
+    <div class="dialog-body">
+      <h2 id="relay-test-title">Relay health test</h2>
+      <p class="muted small">Checks only the relay. No Mozilla request or account information is sent.</p>
+      <p id="relay-test-state" role="status">Testing…</p>
+      <pre id="relay-test-log" dir="ltr" aria-live="polite"></pre>
+      <div class="dialog-actions">
+        <button type="button" class="btn" id="relay-test-copy">Copy report</button>
+        <button type="button" class="btn" id="relay-test-retry">Retry</button>
+        <button type="button" class="btn primary" id="relay-test-close">Close</button>
+      </div>
+    </div>
+  </dialog>
   <div id="toast" class="toast" hidden></div>
 </body>
 </html>

@@ -1670,4 +1670,27 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'Ошибка';
+
+  @override
+  String get testRelay => 'Проверить реле';
+
+  @override
+  String get relayTestTitle => 'Проверка реле';
+
+  @override
+  String get relayTestHint =>
+      'Проверяется только реле. Запросы к Mozilla и данные аккаунта не отправляются.';
+
+  @override
+  String get relayTestPassed => 'Реле готово';
+
+  @override
+  String get relayTestFailed => 'Не удалось подтвердить исправность реле';
+
+  @override
+  String get relayTestCopy => 'Копировать отчёт';
+
+  @override
+  String get relayTestInterrupted =>
+      'Проверка завершилась до получения полного результата.';
 }

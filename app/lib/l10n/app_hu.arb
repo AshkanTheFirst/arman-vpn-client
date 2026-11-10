@@ -472,5 +472,12 @@
   "connRouteDirect": "Közvetlen",
   "connRouteBlocked": "Letiltva",
   "connRoutePort": "Port elutasítva",
-  "connRouteFailed": "Sikertelen"
+  "connRouteFailed": "Sikertelen",
+  "testRelay": "Átjátszó ellenőrzése",
+  "relayTestTitle": "Átjátszó állapotvizsgálata",
+  "relayTestHint": "Csak az átjátszót ellenőrzi. Nem küld Mozilla-kérést vagy fiókadatokat.",
+  "relayTestPassed": "Az átjátszó kész",
+  "relayTestFailed": "Az átjátszó állapota nem igazolható",
+  "relayTestCopy": "Jelentés másolása",
+  "relayTestInterrupted": "A teszt a teljes eredmény beérkezése előtt véget ért."
 }

@@ -116,6 +116,9 @@ func configureAPIRelay(n config.Network) error {
 			return err
 		}
 		base.DialTLSContext = d.DialTLSContext
+		if !d.require {
+			base.DialTLSContext = boundedRelayTLS(d, relayTLSAttemptWait/2)
+		}
 		ech = config.RelayECHOn
 		if d.require {
 			ech = config.RelayECHRequire
@@ -123,7 +126,7 @@ func configureAPIRelay(n config.Network) error {
 	}
 	transport := &relayFallback{
 		direct: controlplane.QuickTransport(directWait),
-		relay:  &relayTransport{relay: relay, base: base},
+		relay:  &relayTransport{relay: relay, base: newRelayTLSFallback(base, n, relay.Hostname(), dialer.DialContext, nil)},
 	}
 	controlplane.SetTransport(transport)
 	apiRelayTransport = transport

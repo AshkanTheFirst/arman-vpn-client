@@ -1653,6 +1653,72 @@ $("#dns-test").addEventListener("click", async (event) => {
   }
 });
 
+let relayTestAbort = null;
+let relayTestAddress = "";
+
+async function runRelayTest() {
+  relayTestAbort?.abort();
+  const abort = new AbortController();
+  relayTestAbort = abort;
+  const log = $("#relay-test-log");
+  const summary = $("#relay-test-state");
+  log.textContent = "";
+  summary.textContent = "Testing…";
+  $("#relay-test-retry").disabled = true;
+  let completed = false;
+  const consume = (line) => {
+    if (relayTestAbort !== abort || abort.signal.aborted) return;
+    if (!line.trim()) return;
+    const event = JSON.parse(line);
+    if (event.type === "step") {
+      const s = event.step;
+      log.textContent += `${(s.elapsed_ms / 1000).toFixed(2)}s  ${s.status.toUpperCase()}  [${s.stage}${s.code ? ": " + s.code : ""}] ${s.detail}\n`;
+      log.scrollTop = log.scrollHeight;
+    } else if (event.type === "result") {
+      completed = true;
+      summary.textContent = event.result.ok ? "Relay is ready" : "Relay health could not be confirmed";
+    }
+  };
+  try {
+    const response = await fetch("/api/relay/test", {
+      method: "POST", credentials: "same-origin", signal: abort.signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: relayTestAddress, stream: true }),
+    });
+    if (!response.ok) throw new ApiError(response.status, `Relay diagnostics API returned HTTP ${response.status}.`);
+    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+    let pending = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      pending += value;
+      const lines = pending.split("\n");
+      pending = lines.pop();
+      for (const line of lines) consume(line);
+    }
+    if (pending.trim()) consume(pending);
+    if (!completed) throw new Error("The test ended before a complete result was received.");
+  } catch (error) {
+    if (!abort.signal.aborted) {
+      summary.textContent = "Relay health could not be confirmed";
+      // Input addresses and server-supplied bodies never become diagnostics.
+      log.textContent += "ERROR  " + (error instanceof ApiError ? error.message : "The relay diagnostic connection ended unexpectedly.") + "\n";
+    }
+  } finally {
+    if (relayTestAbort === abort) $("#relay-test-retry").disabled = false;
+  }
+}
+
+$("#relay-test").addEventListener("click", () => {
+  relayTestAddress = $("#f-relay").value.trim();
+  $("#relay-test-dialog").showModal();
+  runRelayTest();
+});
+$("#relay-test-retry").addEventListener("click", runRelayTest);
+$("#relay-test-copy").addEventListener("click", () => copyText($("#relay-test-log").textContent, "Relay health report"));
+$("#relay-test-close").addEventListener("click", () => $("#relay-test-dialog").close());
+$("#relay-test-dialog").addEventListener("close", () => relayTestAbort?.abort());
+
 const INT_FIELDS = ["proxy.upstream_connections", "proxy.max_connections"];
 const FLOAT_FIELDS = ["accounts.switch_threshold_percent"];
 

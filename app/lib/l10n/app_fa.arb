@@ -472,5 +472,12 @@
   "connRouteDirect": "مستقیم",
   "connRouteBlocked": "مسدود",
   "connRoutePort": "پورت غیرمجاز",
-  "connRouteFailed": "ناموفق"
+  "connRouteFailed": "ناموفق",
+  "testRelay": "تست سلامت رله",
+  "relayTestTitle": "تست سلامت رله",
+  "relayTestHint": "فقط خود رله بررسی می‌شود؛ درخواستی به موزیلا یا اطلاعات حساب ارسال نمی‌شود.",
+  "relayTestPassed": "رله آماده است",
+  "relayTestFailed": "سلامت رله تأیید نشد",
+  "relayTestCopy": "کپی گزارش",
+  "relayTestInterrupted": "تست پیش از دریافت نتیجهٔ کامل متوقف شد."
 }

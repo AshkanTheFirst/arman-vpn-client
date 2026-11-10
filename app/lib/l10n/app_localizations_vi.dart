@@ -1661,4 +1661,27 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'Thất bại';
+
+  @override
+  String get testRelay => 'Kiểm tra relay';
+
+  @override
+  String get relayTestTitle => 'Kiểm tra tình trạng relay';
+
+  @override
+  String get relayTestHint =>
+      'Chỉ kiểm tra relay. Không gửi yêu cầu tới Mozilla hoặc thông tin tài khoản.';
+
+  @override
+  String get relayTestPassed => 'Relay đã sẵn sàng';
+
+  @override
+  String get relayTestFailed => 'Không thể xác nhận tình trạng relay';
+
+  @override
+  String get relayTestCopy => 'Sao chép báo cáo';
+
+  @override
+  String get relayTestInterrupted =>
+      'Kiểm tra kết thúc trước khi nhận được kết quả đầy đủ.';
 }

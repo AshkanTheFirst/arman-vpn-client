@@ -1676,4 +1676,27 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'Échec';
+
+  @override
+  String get testRelay => 'Tester le relais';
+
+  @override
+  String get relayTestTitle => 'Test du relais';
+
+  @override
+  String get relayTestHint =>
+      'Vérifie uniquement le relais. Aucune requête à Mozilla ni information de compte n’est envoyée.';
+
+  @override
+  String get relayTestPassed => 'Le relais est prêt';
+
+  @override
+  String get relayTestFailed => 'L’état du relais n’a pas pu être confirmé';
+
+  @override
+  String get relayTestCopy => 'Copier le rapport';
+
+  @override
+  String get relayTestInterrupted =>
+      'Le test s’est terminé avant de recevoir un résultat complet.';
 }

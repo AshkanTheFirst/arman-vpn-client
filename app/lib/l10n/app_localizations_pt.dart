@@ -1667,4 +1667,27 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get connRouteFailed => 'Falhou';
+
+  @override
+  String get testRelay => 'Testar o relé';
+
+  @override
+  String get relayTestTitle => 'Teste do relé';
+
+  @override
+  String get relayTestHint =>
+      'Verifica apenas o relé. Não envia pedidos à Mozilla nem dados da conta.';
+
+  @override
+  String get relayTestPassed => 'O relé está pronto';
+
+  @override
+  String get relayTestFailed => 'Não foi possível confirmar o estado do relé';
+
+  @override
+  String get relayTestCopy => 'Copiar relatório';
+
+  @override
+  String get relayTestInterrupted =>
+      'O teste terminou antes de receber um resultado completo.';
 }

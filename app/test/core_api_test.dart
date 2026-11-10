@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,9 +10,11 @@ void main() {
     late HttpServer server;
     late CoreApi api;
     final seen = <String, Object?>{};
+    Completer<void>? relayFinish;
 
     setUp(() async {
       seen.clear();
+      relayFinish = null;
       // A local fixture: unknown requests fail and nothing leaves loopback.
       server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       server.listen((req) async {
@@ -31,6 +34,49 @@ void main() {
         seen['token'] = req.headers.value('X-Local-Token');
         seen['type'] = req.headers.contentType?.mimeType;
         seen['body'] = body;
+        if (req.method == 'POST' && req.uri.path == '/api/relay/test') {
+          try {
+            req.response.bufferOutput = false;
+            if (seen['rejectRelay'] == true) {
+              req.response.statusCode = 500;
+              req.response.write(
+                '{"error":"fixture-secret must not be echoed"}',
+              );
+            } else {
+              req.response.headers.contentType = ContentType(
+                'application',
+                'x-ndjson',
+              );
+              req.response.write(
+                '${jsonEncode({
+                  'type': 'step',
+                  'step': {'stage': 'tcp', 'status': 'ok', 'detail': 'Connected', 'elapsed_ms': 12},
+                })}\n',
+              );
+              await req.response.flush();
+              if (relayFinish != null) await relayFinish!.future;
+              req.response.write(
+                '${jsonEncode({
+                  'type': 'result',
+                  'result': {
+                    'ok': true,
+                    'host': 'relay.example',
+                    'total_ms': 20,
+                    'steps': [
+                      {'stage': 'tcp', 'status': 'ok', 'detail': 'Connected', 'elapsed_ms': 12},
+                    ],
+                  },
+                })}\n',
+              );
+            }
+            await req.response.close();
+          } on HttpException {
+            // Closing the dialog intentionally aborts this connection.
+          } on SocketException {
+            // The separate status client must remain available.
+          }
+          return;
+        }
         // As the core's guard: a state change must be JSON.
         final json = req.headers.contentType?.mimeType == 'application/json';
         final (status, out) = switch ((req.method, req.uri.path)) {
@@ -83,6 +129,9 @@ void main() {
     });
 
     tearDown(() async {
+      if (relayFinish != null && !relayFinish!.isCompleted) {
+        relayFinish!.complete();
+      }
       api.close();
       await server.close(force: true);
     });
@@ -93,6 +142,51 @@ void main() {
       expect(s.systemProxySet, isTrue);
       expect(s.readyAccounts, 1);
       expect(s.totalAccounts, 2);
+    });
+
+    test('streams relay diagnostic steps and the final report', () async {
+      final events = await api
+          .testRelay('https://relay.example/?secret=fixture-secret')
+          .toList();
+      expect(events.length, 2);
+      expect(events.first.step?.stage, 'tcp');
+      expect(events.last.result?.ok, isTrue);
+      expect(events.last.result?.steps.single.detail, 'Connected');
+      expect(seen['token'], 'secret-token');
+      expect(jsonDecode(seen['body'] as String), {
+        'url': 'https://relay.example/?secret=fixture-secret',
+        'stream': true,
+      });
+    });
+
+    test(
+      'cancelling relay diagnostics leaves status polling available',
+      () async {
+        relayFinish = Completer<void>();
+        final first = await api
+            .testRelay('https://relay.example/')
+            .first
+            .timeout(const Duration(seconds: 3));
+        expect(first.step?.stage, 'tcp');
+        expect((await api.status()).readyAccounts, 1);
+        relayFinish!.complete();
+      },
+    );
+
+    test('relay diagnostic API errors do not echo an input secret', () async {
+      seen['rejectRelay'] = true;
+      await expectLater(
+        api.testRelay('https://relay.example/?secret=fixture-secret').toList(),
+        throwsA(
+          isA<CoreApiException>()
+              .having((e) => e.statusCode, 'status', 500)
+              .having(
+                (e) => e.message,
+                'message',
+                isNot(contains('fixture-secret')),
+              ),
+        ),
+      );
     });
 
     test('sends JSON with a DELETE too, which the core requires', () async {
